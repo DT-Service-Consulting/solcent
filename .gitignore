@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+# data & artifacts are large / regenerable
+data/raw/*
+data/interim/*
+data/processed/*
+models/*
+!**/.gitkeep
+venv
+.venv
+.env

@@ -1,0 +1,16 @@
+clearsky:
+  model: ineichen          # pvlib clear-sky model
+  index_clip: [0.0, 1.2]   # clip clear-sky index
+solar_geometry: [zenith, azimuth, elevation, day_length]
+nwp_features:
+  variables: [shortwave_radiation, direct_radiation, diffuse_radiation,
+              cloud_cover, cloud_cover_low, cloud_cover_mid, cloud_cover_high,
+              temperature_2m, wind_speed_10m]
+  multi_model: [mean, spread]      # ensemble mean + std across models
+calendar:
+  fourier_doy_orders: 3            # seasonal sin/cos terms
+  include: [hour, quarter_hour, weekday, month]
+lags:
+  load_factor: ["1D", "7D"]        # same quarter-hour, D-1 and D-7 (admissible at issue time)
+daylight:
+  min_clearsky_ghi: 5.0            # W/m^2 threshold to count a slot as daylight

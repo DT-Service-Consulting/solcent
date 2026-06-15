@@ -1,0 +1,14 @@
+requests
+pandas
+numpy
+pyarrow
+pvlib
+scikit-learn
+lightgbm
+properscoring
+matplotlib
+pyyaml
+# optional / later
+# xgboost
+# ngboost
+# torch

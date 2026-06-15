@@ -1,0 +1,23 @@
+# Forecasting protocol. Confirm the starred (*) values with the project manager.
+forecast_mode: single_shot_day_ahead   # one forecast per day; no intraday updates
+issues_per_day: 1
+issue_time_local: "12:00"          # * D-1 gate closure (CONFIRM with PM)
+timezone: "Europe/Brussels"
+nwp_run: "00Z"                     # * latest run reliably available before issue (CONFIRM)
+nwp_run_safety_margin_hours: 6     # assume the run is this stale, to avoid leakage
+valid_day_offset: 1                # forecast day D = issue day + 1
+slots_per_day: 96
+resolution_minutes: 15
+predict_whole_day_in_one_batch: true
+
+# Day-ahead weather source: Open-Meteo Previous Runs API (leakage-safe lead times).
+weather:
+  point: {lat: 50.85, lon: 4.35}   # single-point spike; replace with a Belgian grid
+  models: [ecmwf_ifs025, icon_eu, gfs_seamless]
+  leads: [1, 2]                    # previous_day1 (early part of D) + previous_day2 (late part)
+
+target:
+  region: "Belgium"
+  normalize_by: monitoredcapacity  # load_factor = measured / capacity  (0..1)
+
+quantiles: [0.1, 0.5, 0.9]
