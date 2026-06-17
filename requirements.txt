@@ -1,13 +1,14 @@
 requests
 pandas
 numpy
-pyarrow
 pvlib
 scikit-learn
 lightgbm
 properscoring
 matplotlib
 pyyaml
+jupyter
+ipykernel 
 # optional / later
 # xgboost
 # ngboost

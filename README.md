@@ -1,4 +1,4 @@
-# Solcent — Day-Ahead Solar Forecasting for Belgium
+# Solcent — Day-Ahead Solar Forecasting for Belgium (Approach 1)
 
 Probabilistic, capacity-normalized **day-ahead** solar generation forecasting for the
 Belgian grid via NWP post-processing. One forecast per day at the gate-closure issue
@@ -32,11 +32,13 @@ pip install -r requirements.txt
 
 ## Run the data spike
 ```bash
-python src/dataset/build_daily_blocks.py        # pulls a demo week, writes data/processed/
+python src/dataset/build_daily_blocks.py        # pulls a demo week -> data/processed/solcent_dataset.csv
+python notebooks/explore.py                      # initial EDA -> stats + figures in reports/figures/
 ```
 Edit the dates in `build_daily_blocks.py` and pull in monthly slices for the full
 2024-01 .. 2026-05 range. Each entry-point script puts `src/` on the path itself, so you
-can run files directly.
+can run files directly. Data is stored as CSV (read back with
+`pd.read_csv(path, index_col=0, parse_dates=True)`).
 
 ## Two rules this project never breaks
 1. **Leakage-safe inputs.** Weather features come from the Open-Meteo *Previous Runs* API

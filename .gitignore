@@ -9,5 +9,3 @@ data/processed/*
 models/*
 !**/.gitkeep
 venv
-.venv
-.env

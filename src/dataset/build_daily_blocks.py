@@ -22,7 +22,7 @@ from ingest import elia, openmeteo  # noqa: E402
 LAT, LON = 50.85, 4.35  # Brussels (single-point spike)
 
 
-def build(start, end, out_path="data/processed/solcent_dataset.parquet"):
+def build(start, end, out_path="data/processed/solcent_dataset.csv"):
     print("Fetching Elia ods032 (Belgium)...")
     el = elia.fetch_ods032(start, end, region="Belgium")
     el_h = (el[["measured", "dayaheadforecast", "dayaheadconfidence10",
@@ -38,7 +38,7 @@ def build(start, end, out_path="data/processed/solcent_dataset.parquet"):
 
     out = pathlib.Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
-    df.to_parquet(out)
+    df.to_csv(out)  # read back: pd.read_csv(path, index_col=0, parse_dates=True)
     print(f"\nSaved {df.shape[0]} rows x {df.shape[1]} cols -> {out_path}")
     return df
 
@@ -46,4 +46,5 @@ def build(start, end, out_path="data/processed/solcent_dataset.parquet"):
 if __name__ == "__main__":
     # Demo week. For the full project: datetime(2024,1,1) .. datetime(2026,5,31),
     # pulled in monthly slices to stay polite to the APIs.
-    build(datetime(2025, 4, 19), datetime(2025, 4, 25))
+    # build(datetime(2025, 4, 19), datetime(2025, 4, 25))
+    build(datetime(2024,1,1), datetime(2026, 5, 31))
