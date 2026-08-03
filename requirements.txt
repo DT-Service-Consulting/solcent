@@ -1,0 +1,14 @@
+eumdac
+satpy
+pyresample 
+matplotlib
+cartopy
+python-dotenv
+pvlib
+requests
+scikit-learn
+xgboost
+torch 
+pytorch-lightning
+pytorch-forecasting
+lightning 

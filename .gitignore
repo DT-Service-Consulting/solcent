@@ -1,0 +1,74 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Project data
+data/raw/
+data/interim/
+data/processed/
+*.csv
+*.parquet
+*.feather
+*.h5
+*.hdf5
+
+# Model artifacts and experiment outputs
+models/
+checkpoints/
+lightning_logs/
+wandb/
+mlruns/
+runs/
+*.ckpt
+*.pth
+*.pt
+*.pkl
+*.joblib
+
+# Generated plots and reports
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.pdf
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+tmp/
+temp/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
