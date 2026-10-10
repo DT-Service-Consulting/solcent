@@ -1,0 +1,11 @@
+arm,model,n,MAE,RMSE,MBE,rRMSE_%,R2,MAE_reduction_%,RMSE_reduction_%
+SARAH-3 satellite (independent),RAW ECMWF (no MOS),37012,55.491,86.274,11.404,25.061,0.866,0.0,0.0
+SARAH-3 satellite (independent),Ridge,37012,55.193,83.139,0.879,24.15,0.876,0.537,3.634
+SARAH-3 satellite (independent),Random Forest,37012,51.957,81.944,3.725,23.803,0.879,6.368,5.019
+SARAH-3 satellite (independent),LightGBM,37012,55.823,86.356,2.146,25.085,0.866,-0.6,-0.095
+SARAH-3 satellite (independent),XGBoost,37012,56.552,86.482,0.929,25.122,0.866,-1.913,-0.242
+"ERA5 (parent's original target, control)",RAW ECMWF (no MOS),37012,24.51,40.942,0.809,11.538,0.968,0.0,0.0
+"ERA5 (parent's original target, control)",Ridge,37012,24.744,41.136,1.129,11.592,0.968,-0.955,-0.473
+"ERA5 (parent's original target, control)",Random Forest,37012,24.805,42.135,0.424,11.874,0.966,-1.203,-2.914
+"ERA5 (parent's original target, control)",LightGBM,37012,25.604,43.626,0.922,12.294,0.964,-4.461,-6.555
+"ERA5 (parent's original target, control)",XGBoost,37012,26.854,45.57,-0.721,12.842,0.961,-9.564,-11.302

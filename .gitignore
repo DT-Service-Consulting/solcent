@@ -38,7 +38,7 @@ data/processed/
 *.hdf5
 
 # Model artifacts and experiment outputs
-models/
+/models
 checkpoints/
 lightning_logs/
 wandb/
@@ -72,3 +72,21 @@ desktop.ini
 .idea/
 *.swp
 *.swo
+
+# Downloaded reference PDFs - copyrighted, must not be redistributed
+Citations/
+
+# Keep derived results referenced by the paper's availability statement
+!v3_ensemble/models/consolidated/*.csv
+!v3_ensemble/models/tuned/*.json
+!v3_ensemble/models/tuned/*.csv
+!v3_ensemble/models/loso_*.csv
+
+# Paper source stays out of the repo (PDF published separately)
+paper/paper.md
+paper/three_way_scan.md
+paper/reference_check.md
+
+# Session and scratch artifacts
+.claude/
+notebooks/.cache.sqlite

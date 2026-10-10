@@ -12,3 +12,7 @@ torch
 pytorch-lightning
 pytorch-forecasting
 lightning 
+seaborn
+openmeteo_requests
+requests_cache
+retry_requests

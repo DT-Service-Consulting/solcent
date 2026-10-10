@@ -1,0 +1,40 @@
+# v3 experiment artifacts.
+#
+# Leading slashes matter here: a bare `models/` matches at ANY depth and would
+# also exclude src/models/, which is source code.
+
+# Large intermediate and processed data - regenerate with the scripts in src/
+/data/
+/reports/
+*.parquet
+*.png
+*.log
+
+# Model outputs: exclude the FILES, not the directory. Git never descends into
+# an excluded directory, so `/models/` would make every negation below dead -
+# a parent directory exclusion cannot be undone by re-including its contents.
+/models/**/*.png
+/models/**/*.pkl
+/models/**/*.txt
+/models/**/*.docx
+/models/*.csv
+
+# Keep the derived results the paper's availability statement promises. Small
+# (tens of KB) and exactly what a reader needs to check any table.
+!/models/consolidated/*.csv
+!/models/tuned/*.json
+!/models/tuned/*.csv
+!/models/loso_*.csv
+!/models/mos_*.csv
+!/models/v3_metrics.csv
+
+# ...but not the row-level prediction dumps. These are 3-22 MB of per-timestamp
+# output, regenerable from the scripts, and outside what the availability
+# statement promises (metric files, per-system results, the sweep, parameters).
+/models/loso_v3_predictions.csv
+/models/mos_satellite_corrected.csv
+/models/v3_predictions_test.csv
+
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
