@@ -103,9 +103,15 @@ def reliability(y, preds):
     return pd.DataFrame(rows)
 
 
-def interval_score(y, lo, hi, alpha=0.65):
-    """Winkler interval score for the P25-P90 band (alpha = 1 - coverage).
-    Penalises width, plus a penalty for every actual falling outside."""
+def interval_score(y, lo, hi, alpha=0.35):
+    """Winkler interval score for the P25-P90 band.
+
+    alpha is the nominal miss rate, 1 - coverage. The P25-P90 band has nominal
+    coverage 0.65, so alpha = 0.35. (Before v1.1-paper the default was 0.65,
+    the coverage itself, which under-weighted the penalty for observations
+    outside the band. The score was not used in the manuscript.)
+    Penalises width, plus 2/alpha times the distance of every observation
+    falling outside the band."""
     y, lo, hi = np.asarray(y), np.asarray(lo), np.asarray(hi)
     width = hi - lo
     below = (2 / alpha) * (lo - y) * (y < lo)

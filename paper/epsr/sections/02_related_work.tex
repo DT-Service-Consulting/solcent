@@ -1,0 +1,39 @@
+\section{Related work}
+\label{sec:related}
+
+\subsection{Learners, fleets and spatial aggregation}
+\label{sec:rw-learners}
+
+\citet{Visser2022} compared twelve day-ahead models, from regression to deep learning and physical approaches, on distributed PV under market-realistic conditions. Ensemble and deep-learning models led, but a larger and more widely spread fleet improved accuracy more than the choice of model. Errors at separated sites are only partly correlated, so aggregation cancels part of them \citep{Aldeman2023}. An individual rooftop gets no such cancellation, so this study reports per-rooftop accuracy. On tabular data of this size, gradient-boosted trees remain state-of-the-art against deep architectures \citep{Grinsztajn2022}.
+
+\subsection{Structure of NWP irradiance error}
+\label{sec:rw-nwp}
+
+How much NWP error post-processing can remove depends on how much is systematic. \citet{Tuononen2019} compared ECMWF IFS day-ahead forecasts with four years of co-located ceilometer and pyranometer data at Helsinki. The overall GHI bias was +8~W\,m$^{-2}$. For correctly classified skies it was $-16$~W\,m$^{-2}$ under clear sky and +27~W\,m$^{-2}$ under overcast, and it grew from +16 to +70~W\,m$^{-2}$ as cloud liquid water path fell. The model places cloud adequately but makes it too transparent: a systematic, learnable error.
+
+Displacement error is not learnable. Under broken cloud, surface irradiance depends on where and when a shadow falls, at scales of kilometres and minutes \citep{Mol2024}, which a 25~km hourly field cannot resolve. Irradiance and power are also usually evaluated in separate studies, although the NWP source affects PV accuracy materially \citep{Mayer2023}, so whether an irradiance gain survives conversion to power is rarely tested.
+% VERIFY (from draft): Mayer2023 checked on metadata only; confirm the claim against the full text.
+
+\subsection{Validation reference}
+\label{sec:rw-reference}
+
+ERA5 is not a neutral reference. Against 41 BSRN stations, 294 European stations and two satellite products, it had a positive GHI bias of +4.05~W\,m$^{-2}$ globally and +4.54~W\,m$^{-2}$ over Europe, overestimating under cloud and slightly underestimating under clear skies, with larger absolute errors than the satellite products \citep{Urraca2018}. A reference that errs with cloud in the same direction as the model under test is a poor instrument for cloud-dependent forecast error.
+
+SARAH-3 retrieves surface solar radiation from Meteosat imagery at 0.05$^\circ$ and 30-min resolution \citep{Pfeifroth2024,Pfeifroth2023}. Against 313 European pyranometers, CM SAF products show mean absolute deviation of 8--13~W\,m$^{-2}$ in central Europe, worse over snow, mountains, coastlines and at high latitude \citep{Urraca2017}; Belgium is in the favourable part of this range. What matters is not higher accuracy but errors independent of the forecast under test. To our knowledge, the effect of the reference choice on reported day-ahead error has not been quantified on the same data.
+
+\subsection{Probabilistic forecasting and what to report}
+\label{sec:rw-prob}
+
+Proper scoring rules underpin probabilistic verification \citep{Gneiting2007}; for solar irradiance, \citet{Lauret2019} separate calibration from sharpness and recommend CRPS and the pinball loss. For deterministic day-ahead forecasts, only skill against a stated, standard reference is comparable across studies \citep{Yang2019}. $R^2$ is a poor headline for rooftop output, because most of its variance is the diurnal and seasonal cycle that astronomy supplies for free; skill against persistence cancels it.
+% VERIFY (from draft): Lauret2019 and Yang2019 checked on metadata only.
+
+Ensemble NWP underpins most operational probabilistic solar forecasting \citep{Wang2022}. Raw ensembles are under-dispersed, so calibration and quantile combination are routine \citep{YangYangLiu2023}. \citet{MayerYang2023} paired the weather ensemble with an ensemble of physical model chains and reached 18.4\% mean-normalised CRPS on 14 utility-scale plants. Such work assumes known design data and that dispersion carries information the point model lacks, which is untested for a quantile regressor already conditioned on clear-sky index and solar geometry. Without ensembles, conformalized quantile regression gives distribution-free intervals \citep{Romano2019}.
+
+\subsection{Transfer to unseen sites and metadata quality}
+\label{sec:rw-transfer}
+
+\citet{Depoortere2025} is the closest comparator. On residential fleets in the Netherlands and Australia and commercial sites in Belgium, a transferred model beat a locally trained one until about half a year of local data had accumulated; with weather inputs, a local model needed about two months to beat a naive baseline. Mis-specifying coordinates by 200~km removed the transfer advantage within two months.
+
+\citet{Killinger2018} assembled data on 2.8 million PV systems and found PVOutput.org, the source used here, strongly affected by implausible tilt entries. Missing tilt and azimuth can be inferred from generation data with errors of about 4.5$^\circ$ \citep{Meng2020}, and physical model chains are sensitive to design-data quality \citep{Mayer2021}. Rated capacity, which normalises the target of every fleet model, has received less attention, and its effect on transfer to unseen sites has not been characterised.
+
+This study links these strands, from reference choice through post-processing to PV accuracy on seen and unseen rooftops.

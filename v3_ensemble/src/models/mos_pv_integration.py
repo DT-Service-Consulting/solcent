@@ -159,14 +159,15 @@ def apply_to_grid(ratio_hourly):
 
 
 class MultiQuantileLGBM:
-    def __init__(self, **params):
+    def __init__(self, params):
         self.params = params
         self.models = {}
 
     def fit(self, X, y):
+        # per-quantile parameters: self.params maps quantile -> dict
         for q in C.QUANTILES:
             self.models[q] = lgb.LGBMRegressor(objective="quantile", alpha=q,
-                                               **self.params).fit(X, y)
+                                               **self.params[q]).fit(X, y)
         return self
 
     def predict(self, X):
@@ -220,7 +221,7 @@ def main():
     rows = []
     for label, cols in arms.items():
         print(f"\n>>> {label}  ({len(cols)} features)", flush=True)
-        m = MultiQuantileLGBM(**C.LGBM_PARAMS).fit(tr[cols], tr[C.TARGET])
+        m = MultiQuantileLGBM(C.TUNED_PARAMS).fit(tr[cols], tr[C.TARGET])
         P = m.predict(te2[cols])
         y = te2[C.TARGET].to_numpy()
         r = {

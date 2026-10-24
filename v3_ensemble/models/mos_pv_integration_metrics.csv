@@ -1,4 +1,4 @@
 arm,n_features,MAE,RMSE,MBE,R2,skill,mean_pinball,P25_P90_coverage
-A baseline (best v3 config),13,0.0682,0.11107,0.00506,0.80874,0.43111,0.02545,0.61513
-B MOS-corrected irradiance,13,0.06841,0.11103,0.00539,0.8089,0.43135,0.02561,0.61116
-C baseline + MOS as extra features,15,0.06857,0.11109,0.00546,0.80867,0.43101,0.02565,0.60613
+A baseline (best v3 config),13,0.06727,0.1103,0.00495,0.8114,0.43507,0.02529,0.61433
+B MOS-corrected irradiance,13,0.06756,0.11039,0.00537,0.81108,0.4346,0.02539,0.60896
+C baseline + MOS as extra features,15,0.06776,0.11044,0.00556,0.81091,0.43435,0.02549,0.60506

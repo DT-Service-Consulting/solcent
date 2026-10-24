@@ -17,12 +17,13 @@ mos_training_data.csv is ERA5, a reanalysis produced by ECMWF with the same
 IFS model whose forecast MOS was being asked to correct. Shared physics had
 already cancelled most of the error, so there was almost nothing left to learn.
 
-Measured over this study's window and systems:
+Measured over this study's window and systems, on identical rows
+(src/eval/reference_comparison.py; bias = forecast minus reference):
 
     reference        ECMWF rRMSE   RMSE (W/m2)   bias MBE (W/m2)
     ERA5                 16.5 %        51.1           -1.5
     SARAH-3 satellite    29.0 %        86.6           +9.2
-    literature           ~28.8 %         -          positive
+    ground (Tuononen et al. 2019, Helsinki)          about +8
 
 MOS trained on ERA5 was chasing a -1.5 W/m2 bias. Against satellite truth
 there is a real +9.2 W/m2 bias and 86.6 W/m2 of error to attack.

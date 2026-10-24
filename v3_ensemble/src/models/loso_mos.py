@@ -72,7 +72,9 @@ MOS_FEATURES = [
 EPS = 1.0
 N_FOLDS = 5
 CALIB_DAYS = [0, 3, 7, 14, 30]
-LOSO_PARAMS = dict(C.LGBM_PARAMS, n_estimators=300)
+# transfer configuration - selected against held-out systems, matching the
+# LOSO protocol in consolidate.py (see config.TRANSFER_PARAMS)
+LOSO_PARAMS = dict(C.TRANSFER_PARAMS)
 
 
 def mos_model(n_estimators=120):

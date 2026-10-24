@@ -121,6 +121,8 @@ REFS = [
      "ERA5 cloud-dependent bias; worse than satellite [LOAD-BEARING]"),
     ("Verzijlbergh2015", "10.1016/j.solener.2015.06.005", "crossref", META,
      "MOS for NWP irradiance is established practice [LOAD-BEARING]"),
+    ("Visser2019", "10.1109/PVSC40753.2019.8980899", "crossref", "FULL TEXT",
+     "tree ensembles best on 152 distributed PV; skill vs SMART persistence [LOAD-BEARING]"),
     ("Visser2022", "10.1016/j.renene.2021.10.102", "crossref", ABS,
      "12 day-ahead models on distributed PV; fleet size and spacing help [LOAD-BEARING]"),
     ("Wang2022", "10.1016/j.solener.2022.10.062", "crossref", ABS,

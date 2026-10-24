@@ -12,15 +12,17 @@ reanalysis produced by ECMWF using the same IFS model whose forecast is being
 scored against it. Shared physics and shared assimilation make the forecast
 agree with ERA5 far better than it agrees with reality.
 
-Measured consequence, over this study's own window and systems:
+Measured consequence, over this study's window and systems, on identical rows
+(src/eval/reference_comparison.py; bias = forecast minus reference):
 
-    metric                    vs ERA5 (this project)   vs ground sensors (literature)
-    ECMWF day-ahead GHI rRMSE          16.5 %                     28.8 %
-    ECMWF GHI bias (MBE)         -0.8 .. -2.5 W/m2          +49 .. +64 W/m2
+    reference       ECMWF RMSE (W/m2)   rRMSE    bias (W/m2)
+    ERA5                  51.1          16.5 %      -1.5
+    SARAH-3               86.6          29.0 %      +9.2
 
-Two independent signals say the reference is contaminated. The literature is
-unanimous that IFS carries a strongly POSITIVE irradiance bias, caused by
-under-predicting cloud cover. Measured against ERA5 that bias almost vanishes.
+Ground-instrumented verification of IFS day-ahead GHI (Tuononen et al. 2019,
+ACP 19:1985, four years at Helsinki) finds a positive bias of about +8 W/m2,
+which the model attributes to cloud that is too transparent rather than cloud
+that is missing. Against ERA5 that bias almost vanishes.
 
 THE REPLACEMENT
 ---------------

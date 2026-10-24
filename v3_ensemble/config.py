@@ -84,9 +84,12 @@ CLIP     = 1.2
 QUANTILES = [0.25, 0.50, 0.90]
 
 # 12293 excluded by the parent project throughout.
-# 81376 diagnosed in this tree: R2 0.167, 3.08% of test rows but 6.75% of
-# total SSE, output/fleet ratio drifting 0.56-0.91 across the window
-# (time-varying shading or a failing string). Handled via DROP_SYSTEMS.
+# 81376 diagnosed in this tree: 3.08% of test rows but 7.69% of squared error
+# (models/consolidated/exp2_sse_share.csv). Its April-May output relative to
+# the fleet median fell to 0.60 in 2026 (test window), against 0.85 in 2024 and
+# 0.89 in 2025 - the largest drop in the fleet (src/eval/system_drift.py).
+# A time-varying defect, so a static capacity figure cannot absorb it.
+# Handled via BROKEN_SYSTEMS.
 EXCLUDE_SYSTEMS = [12293]
 BROKEN_SYSTEMS  = [81376]
 

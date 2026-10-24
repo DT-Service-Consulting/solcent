@@ -1,0 +1,26 @@
+\section{Introduction}
+\label{sec:intro}
+
+The European Union reached a cumulative PV capacity of 406~GW at the end of 2025, after adding 65.1~GW in that year \citep{SolarPowerEurope2025}. Belgium is among the most densely penetrated markets: its capacity approached 13~GW in 2025, roughly 1,080~W per capita \citep{IEAPVPS2026}. A large share of this capacity sits on residential rooftops. For the power system, these rooftops are a large population of small, sparsely documented generators whose orientation, tilt and even rated capacity are known only approximately.
+
+Their output must be predicted a day in advance. Distribution system operators use day-ahead forecasts to anticipate reverse power flow and congestion on low-voltage feeders. Aggregators and balance-responsible parties bid distributed capacity into day-ahead markets and carry the imbalance cost of forecast error. Home energy-management systems schedule overnight battery charging against expected generation. Each use needs generation at sub-hourly resolution for the following day, from a forecast issued around noon. At this horizon, numerical weather prediction (NWP) is in practice the only source of information about tomorrow's sky \citep{Inman2013,Antonanzas2016}.
+
+Methods for PV forecasting have moved from persistence and autoregressive models to tree ensembles, deep sequence models and transformers \citep{Antonanzas2016,Yang2018}. A meta-analysis of 320 studies \citep{Nguyen2026} found that, at the day-ahead horizon, NWP input is worth +11.6 percentage points of skill score, about 1.6 times the largest model-family effect (+7.0 points for ensemble-hybrid models). The same work found that reported skill rose 3 points from 2006 to 2019 but 10 points from 2021 to 2022, which points to publication and selection bias rather than a step change in capability. If accuracy is set mainly by the input, then each input has a ceiling that no learner can exceed. Locating that ceiling needs an experiment that supplies information the operational forecast cannot have, not another benchmark comparison.
+
+Three further problems are seldom quantified together on one dataset (Section~\ref{sec:related}). First, the \emph{reference problem}: without ground sensors, NWP irradiance is often validated against ERA5 \citep{Hersbach2020}, which is produced by the same centre and model as the forecast under test. Satellite retrievals such as SARAH-3 \citep{Pfeifroth2024} are an independent alternative. Second, the \emph{propagation problem}: model output statistics (MOS) correct NWP irradiance on the premise that better irradiance gives better power \citep{Verzijlbergh2015}. That premise holds for a physical model chain \citep{Mayer2021,Mayer2022}, but it is rarely tested when the downstream model is a learner trained on the same biased input. Third, the \emph{transfer problem}: most reported accuracy comes from chronological splits in which every system is also in the training set. This overstates what a newly connected rooftop receives \citep{Depoortere2025}, and the causes of transfer failure, as opposed to the average, are seldom examined.
+
+This study addresses four research questions for a fleet of residential rooftops:
+\begin{itemize}
+\item[RQ1.] How much of the day-ahead error comes from the limits of the NWP input, and how much can the power model still address?
+\item[RQ2.] Does widening the NWP input, through lagged re-runs, multi-model averaging or ensemble dispersion, move that limit?
+\item[RQ3.] How much does the validation reference distort measured irradiance error, and does a correction learned against an independent reference improve power forecasts?
+\item[RQ4.] What accuracy does a rooftop absent from training receive, what drives the failures, and how much local history is needed before site calibration helps?
+\end{itemize}
+
+The contributions are diagnostic rather than architectural:
+\begin{enumerate}
+\item A fleet-oracle experiment that bounds the value of perfect regional weather knowledge (RQ1).
+\item Evidence that averaging across meteorological centres helps while averaging re-runs of one centre does not, and that ensemble dispersion adds no probabilistic skill to a quantile model (RQ2).
+\item A measurement of reanalysis-reference distortion, checked against an independent ground-instrumented study, and an end-to-end test showing that a working irradiance correction does not propagate to power, on seen and unseen rooftops (RQ3).
+\item A deployment benchmark for unseen rooftops: the full outcome distribution, a hyperparameter-selection protocol for transfer, rated-capacity error as the main failure mode, and the local history needed before calibration (RQ4).
+\end{enumerate}

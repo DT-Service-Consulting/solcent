@@ -1,0 +1,93 @@
+%% 
+%% Copyright 2007-2025 Elsevier Ltd
+%% 
+%% This file is part of the 'Elsarticle Bundle'.
+%% ---------------------------------------------
+%% 
+%% It may be distributed under the conditions of the LaTeX Project Public
+%% License, either version 1.2 of this license or (at your option) any
+%% later version.  The latest version of this license is in
+%%    http://www.latex-project.org/lppl.txt
+%% and version 1.2 or later is part of all distributions of LaTeX
+%% version 1999/12/01 or later.
+%% 
+%% The list of all files belonging to the 'Elsarticle Bundle' is
+%% given in the file `manifest.txt'.
+%% 
+
+%% Template article for Elsevier's document class `elsarticle'
+%% with numbered style bibliographic references
+%% SP 2008/03/01
+%%
+%% 
+%%
+%% $Id: $
+%%
+%%
+%%Use doublespacing by default.
+\usepackage{setspace}
+\doublespacing
+
+\usepackage{placeins}
+
+\usepackage{geometry}
+\geometry{twoside,
+  paperwidth=210mm,
+  paperheight=297mm,
+  textheight=237mm,
+  textwidth=150mm,
+  centering,
+  headheight=17.64mm,
+  headsep=4.23mm,
+  footskip=12pt,
+  footnotesep=24pt plus 2pt minus 12pt,
+}
+
+\renewcommand\topfraction{1}
+\renewcommand\bottomfraction{1}
+\renewcommand\textfraction{0}
+\renewcommand\floatpagefraction{.95}
+\renewcommand\dbltopfraction{1}
+\renewcommand\dblfloatpagefraction{.95}
+\setcounter{topnumber}{8}
+\setcounter{bottomnumber}{3}
+\setcounter{totalnumber}{8}
+\setcounter{dbltopnumber}{6}
+
+\parskip=18pt
+
+\widowpenalty=10000
+\clubpenalty=10000
+\displaywidowpenalty=10000
+
+\long\def\pprintMaketitle{\clearpage
+  \iflongmktitle\if@twocolumn\let\columnwidth=\textwidth\fi\fi
+  \resetTitleCounters
+  \def\baselinestretch{1}%
+  \printFirstPageNotes
+  \begin{\elsarticletitlealign}%
+ \thispagestyle{pprintTitle}%
+   \def\baselinestretch{1}%
+    \Large\@title\par\vskip18pt%
+    \ifx\@elsarticlenewpageafter\newpage@after@title% %*%
+      \newpage
+    \fi%
+    \ifdoubleblind
+      \vspace*{2pc}
+    \else
+      \normalsize\elsauthors\par\vskip10pt
+      \footnotesize\itshape\elsaddress\par\vskip36pt
+    \fi
+    \ifx\@elsarticlenewpageafter\newpage@after@author% %*%
+      \newpage
+    \fi%
+    \hrule\vskip12pt
+    \ifvoid\absbox\else\unvbox\absbox\par\vskip10pt\fi
+    \ifvoid\keybox\else\vskip\baselineskip\unvbox\keybox\par\vskip10pt\fi
+    \hrule\vskip12pt
+    \ifx\@elsarticlenewpageafter\newpage@after@abstract% %*%
+      \newpage
+    \fi%
+    \end{\elsarticletitlealign}%
+    \gdef\thefootnote{\arabic{footnote}}%
+  }

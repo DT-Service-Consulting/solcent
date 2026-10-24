@@ -1,0 +1,82 @@
+%% Manuscript for Electric Power Systems Research (Elsevier)
+%% Based on elsarticle-template-harv.tex from the EPSR LaTeX bundle.
+%% EPSR uses name-year (Harvard) citations: \citet{key} -> Author (Year),
+%% \citep{key} -> (Author, Year). References come from refs.bib.
+%%
+%% Word limit (Full Length Article): 7000 words, counting abstract, text,
+%% tables, figure captions and appendices. References and acknowledgements
+%% are not counted. State the article length in the cover letter.
+
+\documentclass[preprint,review,12pt,authoryear]{elsarticle}
+
+\usepackage{epsr}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{tabularx}   % tables that fit \textwidth and wrap long cells
+\usepackage{flafter}    % a float never appears before the text that calls it
+\usepackage{siunitx}
+\usepackage[hidelinks]{hyperref}
+%% Line numbers help reviewers cite exact lines. Uncomment \linenumbers to switch them on.
+\usepackage{lineno}
+%\linenumbers
+
+\journal{Electric Power Systems Research}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Day-ahead probabilistic forecasting of residential rooftop photovoltaic power: transfer to unseen systems and the input-imposed accuracy limit}
+
+\author[mit]{Chandradip Roy\corref{cor1}}
+\ead{official.chandradip@gmail.com}
+\cortext[cor1]{Corresponding author.}
+
+\author[dtsc]{Sara Ghane}
+\ead{sara.ghane@dtsc.be}
+
+\affiliation[mit]{organization={Manipal Institute of Technology},
+            addressline={Udupi-Karkala Rd, Eshwar Nagar},
+            city={Manipal},
+            postcode={576104},
+            state={Karnataka},
+            country={India}}
+
+\affiliation[dtsc]{organization={The Belgian Research Lab for AI in INdustry (BRAIN), DT Services and Consulting},
+            country={Belgium}}
+
+\begin{abstract}
+\input{sections/00_abstract}
+\end{abstract}
+
+%% Graphical abstract is optional for EPSR; leave empty unless one is prepared.
+%% \begin{graphicalabstract}
+%% \includegraphics{grabs}
+%% \end{graphicalabstract}
+
+\begin{highlights}
+\input{sections/00_highlights}
+\end{highlights}
+
+\begin{keyword}
+Photovoltaic \sep Forecasting \sep Day-ahead \sep NWP \sep Quantile regression \sep Transfer learning \sep Verification
+\end{keyword}
+
+\end{frontmatter}
+
+\input{sections/01_introduction}
+\input{sections/02_related_work}
+\input{sections/03_data}
+\input{sections/04_methods}
+\input{sections/05_results}
+\input{sections/06_discussion}
+\input{sections/07_conclusions}
+
+\input{sections/08_declarations}
+
+\FloatBarrier
+\bibliographystyle{elsarticle-harv}
+\bibliography{refs}
+
+\end{document}

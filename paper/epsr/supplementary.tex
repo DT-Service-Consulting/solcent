@@ -1,0 +1,201 @@
+%% Supplementary material for:
+%% "Day-ahead probabilistic forecasting of residential rooftop photovoltaic power:
+%%  transfer to unseen systems and the input-imposed accuracy limit"
+%% Compile separately from main.tex. Uses the same refs.bib.
+
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=25mm]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage[authoryear,round]{natbib}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url} % \path{} lets long file paths break at / _ .
+\def\UrlBreaks{\do\/\do\_\do\.}
+
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thesection}{S\arabic{section}}
+
+\title{Supplementary material\\[4pt]\large Day-ahead probabilistic forecasting of residential rooftop photovoltaic power: transfer to unseen systems and the input-imposed accuracy limit}
+\author{Chandradip Roy, Sara Ghane}
+\date{}
+
+\begin{document}
+\maketitle
+
+Section and table numbers in the main text are referred to as ``main text''. All values come from the analysis repository (tag \texttt{v1.1-paper}); the source file is given under each table.
+
+%% ---------------------------------------------------------------------------
+\section{Headline arms and recalibration}
+\label{sec:s-arms}
+
+\begin{table}[!htb]
+\centering
+\caption{Headline arms on the chronological test split, before and after conformal recalibration. Systems: 33 = full fleet, 32 = system 81376 excluded. Source: \path{models/consolidated/exp4_arms.csv}.}
+\label{tab:s-arms}
+\small
+\begin{tabularx}{\textwidth}{@{}l X c c c c c@{}}
+\toprule
+Arm & Configuration & Systems & $R^2$ & Skill & Pinball & P25--P90 cov. \\
+\midrule
+A & Base (12 features) & 33 & 0.7960 & 0.4139 & 0.02606 & 0.619 \\
+  & \quad recalibrated & 33 & 0.7964 & 0.4145 & 0.02602 & 0.658 \\
+B & Base + multi-model mean & 33 & 0.7998 & 0.4194 & 0.02580 & 0.610 \\
+  & \quad recalibrated & 33 & 0.8000 & 0.4197 & 0.02578 & 0.646 \\
+D & Base (12 features) & 32 & 0.8070 & 0.4285 & 0.02558 & 0.622 \\
+  & \quad recalibrated & 32 & 0.8074 & 0.4292 & 0.02554 & 0.659 \\
+C & Base + multi-model mean (proposed) & 32 & 0.8114 & 0.4351 & 0.02529 & 0.614 \\
+  & \quad recalibrated & 32 & 0.8117 & 0.4355 & 0.02527 & 0.649 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+System 81376 is excluded from arms C and D because its defect is time-varying. Its April--May output relative to the fleet median was 0.85 in 2024 and 0.89 in 2025, but 0.60 in 2026 (test window), the largest drop in the fleet (fleet median change $-3\%$). Source: \path{src/eval/system_drift.py}, \path{models/system_drift_monthly.csv}.
+
+%% ---------------------------------------------------------------------------
+\section{Selected hyperparameters}
+\label{sec:s-hparams}
+
+\begin{table}[!htb]
+\centering
+\caption{LightGBM hyperparameters. Temporal: one search per quantile on the chronological split. Transfer: P50 search against held-out systems. Sources: \path{models/tuned/best_params_quantile.json}, \texttt{best\_params\_transfer.json}.}
+\label{tab:s-hparams}
+\small
+\begin{tabular}{@{}l c c c c@{}}
+\toprule
+Parameter & Temporal P25 & Temporal P50 & Temporal P90 & Transfer P50 \\
+\midrule
+Learning rate & 0.0152 & 0.0129 & 0.0147 & 0.0184 \\
+Trees & 1418 & 1999 & 1993 & 1500 \\
+Max depth & 11 & 15 & 20 & 4 \\
+Leaves & 222 & 247 & 148 & 101 \\
+Min child samples & 45 & 155 & 82 & 119 \\
+Subsample (freq.) & 0.771 (1) & 0.630 (0) & 0.779 (4) & 0.561 (2) \\
+Column subsample & 0.631 & 0.590 & 0.567 & 0.668 \\
+L1 penalty & 0.122 & 0.163 & 0.492 & 0.144 \\
+L2 penalty & 0.0347 & 0.0081 & 0.0015 & 4.344 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Search spaces: learning rate 0.01--0.2 (log scale); tree caps 2000 (temporal) and 1500 (transfer). Both searches reached or approached their caps (main text, Limitations).
+
+%% ---------------------------------------------------------------------------
+\section{Irradiance-level MOS}
+\label{sec:s-mos}
+
+\begin{table}[!htb]
+\centering
+\caption{MOS of ECMWF day-ahead GHI on the test split ($n = 37{,}012$ hourly rows), by truth source and learner. MBE = forecast minus truth. Positive reduction = improvement. Source: \path{models/mos_satellite_metrics.csv}.}
+\label{tab:s-mos}
+\small
+\begin{tabular}{@{}l l c c c c c@{}}
+\toprule
+Truth & Model & MAE & RMSE & MBE & $R^2$ & MAE red. (\%) \\
+ & & (W\,m$^{-2}$) & (W\,m$^{-2}$) & (W\,m$^{-2}$) & & \\
+\midrule
+SARAH-3 & Raw ECMWF & 55.49 & 86.27 & +11.40 & 0.866 & 0.00 \\
+ & Ridge & 55.19 & 83.14 & +0.88 & 0.876 & 0.54 \\
+ & Random forest & 51.96 & 81.94 & +3.73 & 0.879 & 6.37 \\
+ & LightGBM & 55.82 & 86.36 & +2.15 & 0.866 & $-0.60$ \\
+ & XGBoost & 56.55 & 86.48 & +0.93 & 0.866 & $-1.91$ \\
+\midrule
+ERA5 & Raw ECMWF & 24.51 & 40.94 & +0.81 & 0.968 & 0.00 \\
+ & Ridge & 24.74 & 41.14 & +1.13 & 0.968 & $-0.96$ \\
+ & Random forest & 24.81 & 42.14 & +0.42 & 0.966 & $-1.20$ \\
+ & LightGBM & 25.60 & 43.63 & +0.92 & 0.964 & $-4.46$ \\
+ & XGBoost & 26.85 & 45.57 & $-0.72$ & 0.961 & $-9.56$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The test rows here are a subset of the study window, so the raw errors differ from the whole-window reference comparison in the main text (RMSE 86.6 against 51.1~W\,m$^{-2}$). Both comparisons point the same way. Whole-window source: \path{src/eval/reference_comparison.py}.
+
+%% ---------------------------------------------------------------------------
+\section{Local calibration sweep}
+\label{sec:s-calib}
+
+\begin{table}[!htb]
+\centering
+\caption{Median skill on 33 held-out rooftops by calibration window and correction. The evaluation window shrinks as the calibration window grows, so compare only within a row. Source: \path{models/consolidated/exp5_calib_skill_pivot.csv}.}
+\label{tab:s-calib-skill}
+\small
+\begin{tabular}{@{}r c c c c@{}}
+\toprule
+Days & None & Bias & Capacity + bias & Linear \\
+\midrule
+0 & 0.3465 & -- & -- & -- \\
+3 & \textbf{0.3469} & 0.2917 & 0.2625 & $-0.1099$ \\
+7 & \textbf{0.3456} & 0.3260 & 0.3062 & $-0.1122$ \\
+14 & \textbf{0.3404} & 0.3069 & 0.3151 & 0.1169 \\
+30 & 0.3186 & 0.3198 & 0.3230 & \textbf{0.3276} \\
+45 & 0.3095 & 0.3299 & 0.3192 & \textbf{0.3312} \\
+60 & 0.2660 & 0.2912 & 0.2809 & \textbf{0.3194} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!htb]
+\centering
+\caption{As Table~\ref{tab:s-calib-skill}, median $R^2$. Source: \path{models/consolidated/exp5_calib_r2_pivot.csv}.}
+\label{tab:s-calib-r2}
+\small
+\begin{tabular}{@{}r c c c c@{}}
+\toprule
+Days & None & Bias & Capacity + bias & Linear \\
+\midrule
+0 & 0.7043 & -- & -- & -- \\
+3 & 0.7100 & 0.7019 & 0.6871 & 0.2309 \\
+7 & 0.7185 & 0.7209 & 0.7074 & 0.3322 \\
+14 & 0.7259 & 0.7116 & 0.7203 & 0.5424 \\
+30 & 0.7366 & 0.7390 & 0.7441 & 0.7366 \\
+45 & 0.7418 & 0.7532 & 0.7545 & 0.7553 \\
+60 & 0.7408 & 0.7626 & 0.7584 & 0.7551 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+By $R^2$, the best correction from 30 days onward varies between methods; by skill, the main-text criterion, linear rescaling is best at every window of 30 days or more.
+
+%% ---------------------------------------------------------------------------
+\section{Shading flag and zero-shot accuracy}
+\label{sec:s-shade}
+
+Owners report shading as none, low or medium. Median zero-shot $R^2$ falls across these categories: 0.748 (none, 26 systems), 0.658 (low, 3) and 0.643 (medium, 3); one system has no entry. With three systems in each shaded category the trend is suggestive only. Sources: \path{models/consolidated/exp5_loso_per_system.csv}, \path{data/interim/pvoutput_selection/systems_metadata.csv}.
+
+%% ---------------------------------------------------------------------------
+\section{Positioning against published work}
+\label{sec:s-position}
+
+\begin{table}[!htb]
+\centering
+\caption{Comparison with published results. Validation: should agree if the pipeline is correct. Corroboration: qualitative agreement under different conditions. Not comparable: different quantity or reference.}
+\label{tab:s-position}
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+Kind & Published & This study \\
+\midrule
+Validation: ECMWF GHI bias & +8~W\,m$^{-2}$, four years of ceilometer and pyranometer data at 60$^\circ$N \citep{Tuononen2019} & +9.2~W\,m$^{-2}$ against SARAH-3 \\
+Validation: reference uncertainty & CM SAF satellite products, MAD 8--13~W\,m$^{-2}$ in central Europe \citep{Urraca2017} & inherited by all irradiance figures \\
+Corroboration: ERA5 as reference & cloud-dependent bias, larger errors than satellite products \citep{Urraca2018} & ERA5 understates ECMWF RMSE 1.69-fold and reverses the bias \\
+Corroboration: learner & tree ensembles best on 152 distributed systems \citep{Visser2019} & gradient boosting adopted \\
+Corroboration: input vs model & NWP worth +11.6 points of skill at day-ahead, above any model family \citep{Nguyen2026} & oracle headroom +0.023 $R^2$; best input widening +0.0044 $R^2$ \\
+Corroboration: transfer & local model needs $\sim$2 months to beat a naive baseline \citep{Depoortere2025} & local correction harmful below $\sim$30 days \\
+Not comparable: probabilistic & 18.4\% mean-normalised CRPS, 14 utility-scale plants \citep{MayerYang2023} & mean pinball 0.02529; nRMSE 11.0\% of capacity \\
+Not comparable: skill & skill against smart persistence \citep{Visser2019} & skill 0.4351 against plain persistence \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%% ---------------------------------------------------------------------------
+\section{Computation}
+\label{sec:s-compute}
+
+All experiments ran on one workstation with 12 logical CPU cores (Python 3.12, LightGBM 4.6.0, scikit-learn 1.9.0, pandas 3.0.3, pvlib). The three temporal searches took 145~min in total (42.8, 59.5 and 43.0~min) and the transfer search 21~min. LightGBM's OpenCL GPU backend was 3.0 times slower than the CPU on this workload (47.4~s against 15.8~s for 300 trees on the training split). With 13 features there is too little histogram work per row for the GPU to recover its kernel-launch overhead.
+%% GPU timing source: v3_ensemble/README.md ("Note on GPU"); no log file in the repository.
+
+\bibliographystyle{elsarticle-harv}
+\bibliography{refs}
+
+\end{document}
