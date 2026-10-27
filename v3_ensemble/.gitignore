@@ -22,6 +22,8 @@
 # Keep the derived results the paper's availability statement promises. Small
 # (tens of KB) and exactly what a reader needs to check any table.
 !/models/consolidated/*.csv
+!/models/consolidated_full/*.csv
+!/models/revision/*.csv
 !/models/tuned/*.json
 !/models/tuned/*.csv
 !/models/loso_*.csv
@@ -34,6 +36,7 @@
 /models/loso_v3_predictions.csv
 /models/mos_satellite_corrected.csv
 /models/v3_predictions_test.csv
+/models/revision/preds/
 
 __pycache__/
 *.py[cod]

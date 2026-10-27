@@ -40,17 +40,17 @@ Arm & Configuration & Systems & $R^2$ & Skill & Pinball & P25--P90 cov. \\
 \midrule
 A & Base (12 features) & 33 & 0.7960 & 0.4139 & 0.02606 & 0.619 \\
   & \quad recalibrated & 33 & 0.7964 & 0.4145 & 0.02602 & 0.658 \\
-B & Base + multi-model mean & 33 & 0.7998 & 0.4194 & 0.02580 & 0.610 \\
+B & Base + multi-model mean (proposed) & 33 & 0.7998 & 0.4194 & 0.02580 & 0.610 \\
   & \quad recalibrated & 33 & 0.8000 & 0.4197 & 0.02578 & 0.646 \\
 D & Base (12 features) & 32 & 0.8070 & 0.4285 & 0.02558 & 0.622 \\
   & \quad recalibrated & 32 & 0.8074 & 0.4292 & 0.02554 & 0.659 \\
-C & Base + multi-model mean (proposed) & 32 & 0.8114 & 0.4351 & 0.02529 & 0.614 \\
+C & Base + multi-model mean & 32 & 0.8114 & 0.4351 & 0.02529 & 0.614 \\
   & \quad recalibrated & 32 & 0.8117 & 0.4355 & 0.02527 & 0.649 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-System 81376 is excluded from arms C and D because its defect is time-varying. Its April--May output relative to the fleet median was 0.85 in 2024 and 0.89 in 2025, but 0.60 in 2026 (test window), the largest drop in the fleet (fleet median change $-3\%$). Source: \path{src/eval/system_drift.py}, \path{models/system_drift_monthly.csv}.
+Arms C and D exclude system 81376 as a sensitivity analysis. Its defect is time-varying and was found after the test errors were seen. Its April--May output relative to the fleet median was 0.85 in 2024 and 0.89 in 2025, but 0.60 in 2026 (test window), the largest drop in the fleet (fleet median change $-3\%$). Source: \path{src/eval/system_drift.py}, \path{models/system_drift_monthly.csv}.
 
 %% ---------------------------------------------------------------------------
 \section{Selected hyperparameters}
@@ -164,6 +164,115 @@ By $R^2$, the best correction from 30 days onward varies between methods; by ski
 Owners report shading as none, low or medium. Median zero-shot $R^2$ falls across these categories: 0.748 (none, 26 systems), 0.658 (low, 3) and 0.643 (medium, 3); one system has no entry. With three systems in each shaded category the trend is suggestive only. Sources: \path{models/consolidated/exp5_loso_per_system.csv}, \path{data/interim/pvoutput_selection/systems_metadata.csv}.
 
 %% ---------------------------------------------------------------------------
+\section{Paired comparisons}
+\label{sec:s-paired}
+
+\begin{table}[!htb]
+\centering
+\caption{Paired differences (second arm minus first) on the chronological test split. Intervals: 95\% day-block bootstrap, 2000 resamples of 107 test days. $p$: two-sided Diebold--Mariano test on daily squared error of P50 ($p_\mathrm{SE}$) and daily mean pinball loss ($p_\mathrm{pin}$), Newey--West variance. Pinball differences in units of $10^{-3}$. Source: \path{src/eval/revision_stats.py}, \path{models/revision/paired_comparisons.csv}.}
+\label{tab:s-paired}
+\scriptsize
+\begin{tabularx}{\textwidth}{@{}X c c c c@{}}
+\toprule
+Comparison & $\Delta$ skill & $\Delta$ pinball & $p_\mathrm{SE}$ & $p_\mathrm{pin}$ \\
+\midrule
+E0 objective: pinball vs RMSE selection (33 systems) & $+0.0031$\,[$+0.0018$, $+0.0045$] & $-0.20$\,[$-0.24$, $-0.16$] & $<0.001$ & $<0.001$ \\
+E1 oracle: + regional truth vs NWP only & $+0.0341$\,[$+0.0224$, $+0.0462$] & $-1.51$\,[$-1.99$, $-1.04$] & $<0.001$ & $<0.001$ \\
+E1 oracle: regional truth without NWP vs NWP only & $-0.1211$\,[$-0.1544$, $-0.0891$] & $+7.53$\,[$+5.89$, $+9.06$] & $<0.001$ & $<0.001$ \\
+E3: + multi-model mean vs base (33 systems) & $+0.0055$\,[$+0.0001$, $+0.0106$] & $-0.26$\,[$-0.46$, $-0.06$] & 0.04 & 0.01 \\
+E3: + mean of all 12 members vs base & $+0.0004$\,[$-0.0035$, $+0.0043$] & $-0.03$\,[$-0.19$, $+0.12$] & 0.96 & 0.77 \\
+E3: + ensemble-mean POA vs base & $+0.0008$\,[$-0.0039$, $+0.0054$] & $-0.01$\,[$-0.20$, $+0.18$] & 0.81 & 0.96 \\
+E3: + lagged mean (days 1-3) vs base & $+0.0002$\,[$-0.0020$, $+0.0022$] & $+0.03$\,[$-0.08$, $+0.14$] & 0.88 & 0.35 \\
+E3: + spread only vs base & $-0.0009$\,[$-0.0042$, $+0.0020$] & $+0.43$\,[$+0.24$, $+0.63$] & 0.47 & $<0.001$ \\
+E3: + all 10 ensemble features vs base & $+0.0016$\,[$-0.0046$, $+0.0071$] & $+0.30$\,[$+0.04$, $+0.60$] & 0.90 & 0.03 \\
+E4: recalibrated vs raw (33 systems, base + ens) & $+0.0003$\,[$-0.0003$, $+0.0009$] & $-0.02$\,[$-0.08$, $+0.04$] & 0.30 & 0.64 \\
+E4 (32 systems): + multi-model mean vs base & $+0.0065$\,[$+0.0011$, $+0.0118$] & $-0.29$\,[$-0.50$, $-0.09$] & 0.02 & 0.005 \\
+MOS seen rooftops (33): corrected irradiance vs baseline & $-0.0004$\,[$-0.0021$, $+0.0013$] & $+0.12$\,[$+0.03$, $+0.23$] & 0.46 & 0.04 \\
+MOS seen rooftops (33): MOS as extra features vs baseline & $+0.0000$\,[$-0.0022$, $+0.0023$] & $+0.18$\,[$+0.07$, $+0.32$] & 0.94 & 0.01 \\
+MOS seen rooftops (32): corrected irradiance vs baseline & $-0.0005$\,[$-0.0021$, $+0.0011$] & $+0.10$\,[$+0.02$, $+0.20$] & 0.42 & 0.06 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%% ---------------------------------------------------------------------------
+\section{Seed variation of the zero-shot results}
+\label{sec:s-seeds}
+
+\begin{table}[!htb]
+\centering
+\caption{Leave-one-system-out P50 results on 33 held-out rooftops for each random seed (LightGBM row and column subsampling). Failures: skill $\le 0$. Paired Wilcoxon signed-rank tests on seed-averaged per-rooftop $R^2$: transfer better than temporal on 22 of 33 rooftops ($p = 0.001$), transfer better than preliminary on 19 ($p = 0.015$), temporal better than preliminary on 10 ($p = 0.014$). Source: \path{src/models/loso_seeds.py}, \path{models/revision/loso_seeds_summary.csv}, \path{src/eval/revision_stats.py}.}
+\label{tab:s-seeds}
+\small
+\begin{tabularx}{\textwidth}{@{}X c c c c c c c@{}}
+\toprule
+Configuration & Seed & Median $R^2$ & Mean $R^2$ & P10 & Worst & Median skill & Failures \\
+\midrule
+Preliminary & 0 & 0.7195 & 0.5967 & 0.3622 & $-0.8550$ & 0.3259 & 4 \\
+Preliminary & 1 & 0.7239 & 0.6040 & 0.3808 & $-0.7164$ & 0.3046 & 4 \\
+Preliminary & 2 & 0.7153 & 0.5997 & 0.3603 & $-0.7696$ & 0.2987 & 4 \\
+Temporal & 0 & 0.7058 & 0.5856 & 0.3113 & $-0.9989$ & 0.3111 & 5 \\
+Temporal & 1 & 0.7051 & 0.5875 & 0.2958 & $-0.8876$ & 0.3075 & 5 \\
+Temporal & 2 & 0.7103 & 0.5911 & 0.3288 & $-0.9205$ & 0.3179 & 4 \\
+Transfer & 0 & 0.7093 & 0.6576 & 0.4978 & $-0.1565$ & 0.3457 & 2 \\
+Transfer & 1 & 0.7046 & 0.6543 & 0.4961 & $-0.1431$ & 0.3403 & 2 \\
+Transfer & 2 & 0.7072 & 0.6584 & 0.5023 & $-0.1526$ & 0.3411 & 2 \\
+Transfer & 3 & 0.7172 & 0.6577 & 0.4974 & $-0.1489$ & 0.3446 & 2 \\
+Transfer & 4 & 0.7163 & 0.6594 & 0.5003 & $-0.1580$ & 0.3418 & 2 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%% ---------------------------------------------------------------------------
+\section{Reference baselines}
+\label{sec:s-baselines}
+
+\begin{table}[!htb]
+\centering
+\caption{Baselines without machine learning on the chronological test split, 33 systems. Pooled: over all test rows. Per rooftop: distribution of $R^2$ over the 33 systems; failures, skill $\le 0$. Physical chain: Hay--Davies plane-of-array irradiance from the ECMWF forecast, Faiman cell temperature, PVWatts ($\gamma = -0.4\,\%\,\mathrm{K}^{-1}$), 14\% losses, nameplate capacity. Source: \path{src/models/baselines.py}, \path{models/revision/baselines_pooled.csv}, \texttt{baselines\_per\_system.csv}.}
+\label{tab:s-baselines}
+\small
+\begin{tabularx}{\textwidth}{@{}X c c c c c c@{}}
+\toprule
+ & \multicolumn{2}{c}{Pooled} & \multicolumn{4}{c}{Per rooftop} \\
+\cmidrule(lr){2-3}\cmidrule(l){4-7}
+Baseline & $R^2$ & Skill & Median $R^2$ & P10 & Worst & Failures \\
+\midrule
+Persistence & 0.4062 & 0 & 0.409 & 0.267 & 0.055 & -- \\
+Smart persistence & 0.4006 & $-0.0047$ & 0.404 & 0.260 & 0.045 & 33 \\
+Physical chain, nameplate & 0.5205 & 0.1014 & 0.608 & 0.160 & $-1.445$ & 8 \\
+Physical chain, per-rooftop scale & 0.6316 & 0.2124 & 0.633 & 0.405 & 0.134 & 2 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Smart persistence rescales yesterday's output by the ratio of clear-sky GHI between the two days. At a one-day lag that ratio is close to one, so the two persistence references differ by less than 0.5\% of RMSE. The per-rooftop scale factor is fitted by least squares on each rooftop's training split (median 0.882, range 0.494--1.584). Across the 33 rooftops, the bias of the nameplate physical chain correlates with the capacity ratio $P_{99}/C_\mathrm{p}$ at +0.845, and its $R^2$ correlates with the zero-shot learner's $R^2$ at +0.938. Wind speed from Open-Meteo is served in km\,h$^{-1}$ and is converted to m\,s$^{-1}$; plane-of-array irradiance is capped at 1400~W\,m$^{-2}$ to remove rare transposition spikes at low sun.
+
+%% ---------------------------------------------------------------------------
+%% [EPSR-SCOPE] grid-facing aggregation. Optional for other journals (JOURNAL_NOTES.md).
+\section{Aggregated forecast error}
+\label{sec:s-aggregate}
+
+\begin{table}[!htb]
+\centering
+\caption{Day-ahead P50 error of the proposed configuration (33 systems) after summing rooftop forecasts in kW. nRMSE: RMSE over installed capacity of the summed rooftops. Skill: against the summed persistence forecast. Daily imbalance: sum over days of $|\sum_t (P - \hat{P})|\,\Delta t$ as a share of energy. Individual: median over rooftops. Source: \path{src/eval/grid_aggregate.py}, \path{models/revision/grid_aggregate.csv}.}
+\label{tab:s-aggregate}
+\small
+\begin{tabularx}{\textwidth}{@{}X c c c c c@{}}
+\toprule
+Level & Rooftops & nRMSE (\% cap.) & Skill & Daily imbalance (\%) & Mean daily imbalance (kWh) \\
+\midrule
+Individual rooftop (median) & 1 & 11.09 & 0.442 & 11.86 & 2.07 \\
+Region: Ardennes & 4 & 8.62 & 0.476 & 10.22 & 8.10 \\
+Region: Li\`ege & 6 & 8.52 & 0.518 & 10.13 & 11.06 \\
+Region: West Flanders coast & 7 & 7.76 & 0.492 & 12.22 & 13.79 \\
+Region: Antwerp & 8 & 7.70 & 0.481 & 11.46 & 14.97 \\
+Region: Brussels and centre & 8 & 6.64 & 0.529 & 8.86 & 14.33 \\
+Fleet & 33 & 4.99 & 0.590 & 8.42 & 49.99 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%% ---------------------------------------------------------------------------
 \section{Positioning against published work}
 \label{sec:s-position}
 
@@ -180,10 +289,10 @@ Validation: ECMWF GHI bias & +8~W\,m$^{-2}$, four years of ceilometer and pyrano
 Validation: reference uncertainty & CM SAF satellite products, MAD 8--13~W\,m$^{-2}$ in central Europe \citep{Urraca2017} & inherited by all irradiance figures \\
 Corroboration: ERA5 as reference & cloud-dependent bias, larger errors than satellite products \citep{Urraca2018} & ERA5 understates ECMWF RMSE 1.69-fold and reverses the bias \\
 Corroboration: learner & tree ensembles best on 152 distributed systems \citep{Visser2019} & gradient boosting adopted \\
-Corroboration: input vs model & NWP worth +11.6 points of skill at day-ahead, above any model family \citep{Nguyen2026} & oracle headroom +0.023 $R^2$; best input widening +0.0044 $R^2$ \\
+Corroboration: input vs model & NWP worth +11.6 points of skill at day-ahead, above any model family \citep{Nguyen2026} & oracle headroom +0.023 $R^2$; best input widening +0.0038 $R^2$ \\
 Corroboration: transfer & local model needs $\sim$2 months to beat a naive baseline \citep{Depoortere2025} & local correction harmful below $\sim$30 days \\
-Not comparable: probabilistic & 18.4\% mean-normalised CRPS, 14 utility-scale plants \citep{MayerYang2023} & mean pinball 0.02529; nRMSE 11.0\% of capacity \\
-Not comparable: skill & skill against smart persistence \citep{Visser2019} & skill 0.4351 against plain persistence \\
+Not comparable: probabilistic & 18.4\% mean-normalised CRPS, 14 utility-scale plants \citep{MayerYang2023} & mean pinball 0.02580; nRMSE 11.3\% of capacity \\
+Not comparable: skill & skill against smart persistence \citep{Visser2019} & skill 0.4194 against plain persistence (smart persistence: $-0.005$) \\
 \bottomrule
 \end{tabularx}
 \end{table}

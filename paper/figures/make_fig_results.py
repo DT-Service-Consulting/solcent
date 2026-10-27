@@ -192,7 +192,8 @@ def fig6_ensemble():
 # ---------------------------------------------------------------------------
 def fig7_calibration():
     r = pd.read_csv(D / "exp4_recalibration.csv")
-    r = r[r.config.str.startswith("C ")]
+    # full fleet (33 systems, base + ensemble mean): the primary configuration
+    r = r[r.config.str.startswith("B ")]
     fig, axes = plt.subplots(1, 2, figsize=(7.1, 2.7))
 
     ax = axes[0]

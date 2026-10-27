@@ -6,14 +6,15 @@
 
 The MOS correction works at the level it was built for, and the gain then disappears in the PV model. Two causes combine. The systematic component is about a tenth of the irradiance error, so even its full removal leaves the problem intact. And a learner trained on the biased input has already fitted around that bias, so it never used the input at face value. The value of post-processing therefore depends on what consumes it. For a physical model chain, which propagates irradiance deterministically, the premise that better irradiance gives better power holds \citep{Mayer2021,Mayer2022}. For a statistical model trained on the same distribution, the gain may not survive, and only an end-to-end test shows whether it does.
 
-The reference result has the same practical weight. Scored against ERA5, the irradiance bias almost vanishes and MOS fails under every learner; scored against SARAH-3, the same procedure works. A study that stopped at the reanalysis comparison would have reached the right outcome for the wrong reason. A reanalysis produced by the same centre with the same model as the forecast is not an independent reference, and agreement with it is not evidence of forecast quality.
+The reference result has the same practical weight. Scored against ERA5, the irradiance bias almost vanishes and MOS fails under every learner; scored against SARAH-3, the same procedure works. A reanalysis produced by the same centre with the same model as the forecast is not an independent reference, and agreement with it is not evidence of forecast quality.
 
 \subsection{Transfer: hyperparameters and metadata}
 \label{sec:disc-transfer}
 
 Hyperparameters selected on a chronological split reward memorising individual rooftops, because those rooftops recur in the test set. On unseen rooftops this capacity becomes a liability. The finding should apply to any fleet model tuned where all units are seen and deployed where they are not. The remedy is cheap, a grouped split in the inner loop of the search, yet it is rarely reported because transfer is rarely evaluated.
 
-For a fleet built from volunteer data, the binding constraint on deployment is the installation record, not the weather model. Excluding one defective rooftop improved $R^2$ by 0.0110, against 0.0044 for the best weather-input change, and the capacity ratio tracks bias on unseen rooftops. Two remedies follow. Tilt and azimuth can be inferred from generation data \citep{Meng2020} instead of trusted. Capacity can be estimated from observed output, but Section~\ref{sec:res-deploy} shows this needs about a month of local history. Before that, a grid operator or aggregator should screen new installations for implausible metadata before relying on their forecasts.
+For a fleet built from volunteer data, the binding constraint on deployment is the installation record, not the weather model. Excluding one defective rooftop would improve $R^2$ by 0.0116, against 0.0038 for the best weather-input change, and the capacity ratio tracks bias on unseen rooftops. Two remedies follow. Tilt and azimuth can be inferred from generation data \citep{Meng2020} instead of trusted. Capacity can be estimated from observed output, but Section~\ref{sec:res-deploy} shows this needs about a month of local history. \ifepsr Before that, a grid operator or aggregator should screen new installations for implausible metadata before relying on their forecasts.% [EPSR-SCOPE]
+\else Before that, new installations should be screened for implausible metadata.\fi
 
 \subsection{What would move the limit}
 \label{sec:disc-limit}
@@ -29,5 +30,8 @@ At the day-ahead horizon the constraint is the placement and timing of cloud at 
 \item \textbf{Metadata used as supplied.} The nine near-flat tilt entries were not filtered. Their median zero-shot $R^2$ (0.704) does not differ significantly from the rest of the fleet (0.723; Mann--Whitney $p = 0.53$), but their transposition is wrong. Coordinates were not perturbed, although \citet{Depoortere2025} show that location errors can remove the transfer advantage.
 \item \textbf{Hyperparameter searches.} Both were budget-limited: temporal learning rates (0.013--0.015) lie near the floor of 0.010, and tree counts reached or approached their caps (2000 temporal, 1500 transfer). The transfer search covered P50 only, so the P25 and P90 models in deployment use the temporal configuration.
 \item \textbf{Learner and ensemble.} Only gradient-boosted trees were tested under the final protocol. Lagged and multi-model constructions stand in for a true initial-condition ensemble, which we could not retrieve for the study window; the dispersion result may not transfer to one.
-\item \textbf{Grid value.} Forecast quality is reported in statistical terms. Its effect on feeder-level operation, imbalance cost or battery scheduling is not quantified.
+%% [EPSR-SCOPE] power-system framing for Electric Power Systems Research; see JOURNAL_NOTES.md
+\ifepsr
+\item \textbf{Grid value.} Aggregated error is reported, but the effect on feeder-level operation, imbalance cost or battery scheduling is not quantified.
+\fi
 \end{itemize}

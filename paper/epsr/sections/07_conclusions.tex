@@ -9,8 +9,9 @@ Day-ahead forecasting for individual residential rooftops is limited by the NWP 
 \item removing 73\% of the irradiance bias leaves PV accuracy unchanged on seen and unseen rooftops.
 \end{enumerate}
 
-Within that limit, gains are small. Averaging forecasts across six centres helps; averaging one centre's re-runs does not, and ensemble dispersion hurts. Recalibration gives honest P90 coverage (0.912) at no cost in accuracy.
+Within that limit, gains are small. Averaging forecasts across six centres helps; averaging one centre's re-runs does not, and ensemble dispersion hurts. Recalibration gives honest P90 coverage (0.913) at no cost in accuracy.
 
 Two results apply beyond this dataset. Validating against a reanalysis from the same model understates RMSE 1.69-fold and reverses the bias. Hyperparameters chosen where every unit is seen transfer poorly; selecting them against held-out systems halves the failures on unseen rooftops.
 
-For grid operators and aggregators, a newly connected rooftop should be expected to perform well below chronological-split figures (median $R^2$ 0.704 against 0.811). Local calibration should wait for about 30 days of history. Transfer failures follow the installation record, chiefly rated capacity, rather than the weather. Effort is therefore better spent on higher-resolution NWP and on metadata inference and screening than on further changes of learner.
+%% [EPSR-SCOPE] power-system framing for Electric Power Systems Research; see JOURNAL_NOTES.md
+\ifepsr For grid operators and aggregators, a\else A\fi\ newly connected rooftop should be expected to perform well below chronological-split figures (median $R^2$ 0.704 against 0.800). Local calibration should wait for about 30 days of history. Transfer failures follow the installation record, chiefly rated capacity, rather than the weather. Effort is therefore better spent on higher-resolution NWP and on metadata inference and screening than on further changes of learner.

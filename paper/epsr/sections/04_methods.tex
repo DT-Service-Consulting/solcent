@@ -21,7 +21,7 @@ with $P$ the AC output in W and $C_\mathrm{p}$ the rated DC capacity in kW$_\mat
 \begin{equation}
 S = 1 - \mathrm{RMSE}_\mathrm{model} / \mathrm{RMSE}_\mathrm{persistence}.
 \end{equation}
-Skill is the headline metric (Section~\ref{sec:rw-prob}). Because part of the previous day is not yet observed at noon, this persistence is slightly optimistic, so the reported skill is conservative.
+Skill is the headline metric (Section~\ref{sec:rw-prob}). Because part of the previous day is not yet observed at noon, this persistence is slightly optimistic, so the reported skill is conservative. Two further references need no training: smart persistence, rescaled by the ratio of clear-sky GHI between the two days, and a physical chain from forecast plane-of-array irradiance (Hay--Davies) through the Faiman cell-temperature model to PVWatts with 14\% losses, driven by nameplate metadata alone.
 
 \subsection{Features}
 \label{sec:meth-features}
@@ -71,7 +71,7 @@ Two hyperparameter searches use a tree-structured Parzen estimator in Optuna \ci
 
 \textbf{Temporal search (known rooftops).} Sixty trials per quantile minimise the pinball loss at that quantile on the validation split. Within the training split, the first 85\% fits the trees and the last 15\% sets early stopping, so the stopping rule and the selection never share data. The comparison is a preliminary configuration selected by 20 trials minimising validation RMSE under squared error and reused for all quantiles (experiment E0).
 
-\textbf{Transfer search (unseen rooftops).} The inner loop holds out whole systems instead of future dates. The systems of a 45\% row subsample of the training and validation periods are split into three folds of eleven. Each trial trains on two folds and is scored by P50 pinball loss on the held-out systems, with early stopping on a time-tail of the training systems. Forty trials were run for P50 only.
+\textbf{Transfer search (unseen rooftops).} The inner loop holds out whole systems instead of future dates. The systems of a 45\% row subsample of the training and validation periods are split into three folds of eleven. Each trial trains on two folds and is scored by P50 pinball loss on the held-out systems, with early stopping on a time-tail of the training systems. Forty trials were run for P50 only. The temporal search excluded system 81376 (Section~\ref{sec:res-config}); the transfer search used all 33 systems.
 
 The temporal configuration is used for every experiment on the chronological split; the transfer configuration is used for P50 in every leave-one-system-out experiment. The two are never compared as interchangeable.
 
@@ -92,7 +92,7 @@ with $n(t)$ the number of systems reporting, and used only where $n(t) > 3$. Thi
 \subsection{Verification and recalibration}
 \label{sec:meth-verif}
 
-Point accuracy is reported as MAE, RMSE, mean bias error (MBE, observed minus predicted, so positive means under-forecasting), $R^2$ and skill. Irradiance bias is reported as forecast minus reference, so positive means over-forecasting, following \citet{Tuononen2019}. Probabilistic quality is reported as the mean pinball loss over the three quantiles, a proper score \citep{Gneiting2007}, as reliability, the empirical frequency of observations below each quantile \citep{Lauret2019}, and as coverage of the P25--P90 band against its nominal 0.65. Errors are stratified by the \emph{forecast} clear-sky index, which is known when decisions are made. Stratifying by the observed index conditions on the target and makes $R^2$ uninterpretable within bins, so only RMSE and bias are read from that view.
+Point accuracy is reported as MAE, RMSE, mean bias error (MBE, observed minus predicted, so positive means under-forecasting), $R^2$ and skill. Irradiance bias is reported as forecast minus reference, so positive means over-forecasting, following \citet{Tuononen2019}. Probabilistic quality is reported as the mean pinball loss over the three quantiles, a proper score \citep{Gneiting2007}, as reliability, the empirical frequency of observations below each quantile \citep{Lauret2019}, and as coverage of the P25--P90 band against its nominal 0.65. Paired differences carry 95\% intervals from a day-block bootstrap (2000 resamples of the 107 test days, all rooftops of a day kept together) and Diebold--Mariano tests on daily loss differentials with Newey--West variance \citep{Diebold1995}. Leave-one-system-out comparisons use Wilcoxon signed-rank tests across rooftops. Errors are stratified by the \emph{forecast} clear-sky index, which is known when decisions are made. Stratifying by the observed index conditions on the target and makes $R^2$ uninterpretable within bins, so only RMSE and bias are read from that view.
 
 Raw quantile regression under-covers at the tails. A conformal-style offset \citep{Romano2019} is fitted on the validation split and applied unchanged to the test split,
 \begin{equation}
@@ -118,7 +118,7 @@ with the fleet median taken from training systems only, and then removes the res
 \subsection{Experiments}
 \label{sec:meth-exp}
 
-Table~\ref{tab:experiments} lists the experiments. Each varies one factor and holds the rest fixed. All numbers in Section~\ref{sec:results} were produced by a single driver with the quantile objective, the final feature build, the splits of Section~\ref{sec:data-splits} and SARAH-3 for irradiance scoring. Computations used Python 3.12, LightGBM 4.6.0, scikit-learn 1.9.0, pandas 3.0.3 and pvlib on a 12-core workstation. The Supplementary material gives the selected hyperparameters, full result tables and computation details.
+Table~\ref{tab:experiments} lists the experiments. Each varies one factor and holds the rest fixed. All model results in Section~\ref{sec:results} were produced by a single driver with the quantile objective, the final feature build, the splits of Section~\ref{sec:data-splits} and SARAH-3 for irradiance scoring. Computations used Python 3.12, LightGBM 4.6.0, scikit-learn 1.9.0, pandas 3.0.3 and pvlib on a 12-core workstation. The Supplementary material gives the selected hyperparameters, full result tables and computation details.
 
 \begin{table}[!htb]
 \centering

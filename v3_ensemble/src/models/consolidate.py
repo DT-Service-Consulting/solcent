@@ -85,6 +85,14 @@ MIN_FLEET = 3
 
 OUT = C.MODELS_DIR / "consolidated"
 OUT.mkdir(parents=True, exist_ok=True)
+# Systems dropped from the single-arm experiments (E0, E3). --full-fleet empties
+# this list so every system is kept; E4 always reports both variants.
+EXCLUDED = list(C.BROKEN_SYSTEMS)
+# --save-preds writes each arm's test-split quantile predictions here, so
+# confidence intervals and tests can be computed without refitting
+# (src/eval/revision_stats.py).
+PRED_DIR = None
+CUR_EXP = ""
 LOG = []
 
 
@@ -94,6 +102,8 @@ def log(msg=""):
 
 
 def banner(t):
+    global CUR_EXP
+    CUR_EXP = t.split(" - ")[0].lower().replace(" ", "")
     log("\n" + "=" * 78)
     log(t)
     log("=" * 78)
@@ -141,7 +151,23 @@ def score_p50(te, P, label, extra=None):
          "P25_P90_coverage": M.coverage(y, P[0.25], P[0.90])}
     if extra:
         r.update(extra)
+    if PRED_DIR is not None:
+        save_preds(te, P, label)
     return r
+
+
+def save_preds(te, P, label):
+    slug = "".join(ch if ch.isalnum() else "_" for ch in label.lower()).strip("_")
+    while "__" in slug:
+        slug = slug.replace("__", "_")
+    out = pd.DataFrame({
+        "system_id": te.system_id.to_numpy(),
+        "timestamp": te.timestamp.to_numpy(),
+        "y": te[C.TARGET].to_numpy(),
+        "persistence": te.pred_persistence.to_numpy(),
+        "p25": P[0.25], "p50": P[0.50], "p90": P[0.90],
+    })
+    out.to_csv(PRED_DIR / f"{CUR_EXP}__{slug}.csv.gz", index=False)
 
 
 # ---------------------------------------------------------------------------
@@ -157,7 +183,7 @@ def exp0_objective_sensitivity(df):
     base = [c for c in C.BASE_FEATURES if c in df.columns]
     ens = [c for c in C.ENSEMBLE_FEATURES if c in df.columns]
     cols = base + ens
-    d = df[~df.system_id.isin(C.BROKEN_SYSTEMS)]
+    d = df[~df.system_id.isin(EXCLUDED)]
     tr, te = d[d.split == "train"], d[d.split == "test"]
 
     inherited = {q: dict(C.LGBM_PARAMS) for q in QUANTILES}
@@ -265,7 +291,7 @@ def exp3_ensemble(df):
     spread = [c for c in ["ens_kt_std", "ens_lag_std", "ens_model_std",
                           "ens_agree_frac", "ens_ghi_iqr"] if c in df.columns]
 
-    d = df[~df.system_id.isin(C.BROKEN_SYSTEMS)]
+    d = df[~df.system_id.isin(EXCLUDED)]
     lag = [f"ghi_lag{i}" for i in (1, 2, 3) if f"ghi_lag{i}" in d.columns]
     d = d.copy()
     if lag:
@@ -449,13 +475,28 @@ def main():
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", default=None,
-                    choices=["exp0", "exp1", "exp2", "exp3", "exp4", "exp5"],
-                    help="re-derive a single experiment, leaving the rest")
-    only = ap.parse_args().only
+                    help="comma-separated experiments to re-derive, e.g. exp0,exp3")
+    ap.add_argument("--full-fleet", action="store_true",
+                    help="keep every system in E0 and E3 (no 81376 exclusion); "
+                         "writes to models/consolidated_full/")
+    ap.add_argument("--save-preds", action="store_true",
+                    help="write each arm's test predictions to models/revision/preds/")
+    args = ap.parse_args()
+    only = set(args.only.split(",")) if args.only else None
+    global OUT, EXCLUDED, PRED_DIR
+    if args.full_fleet:
+        EXCLUDED = []
+        OUT = C.MODELS_DIR / "consolidated_full"
+        OUT.mkdir(parents=True, exist_ok=True)
+    if args.save_preds:
+        PRED_DIR = C.MODELS_DIR / "revision" / "preds"
+        PRED_DIR.mkdir(parents=True, exist_ok=True)
 
     t0 = time.time()
     log(f"CONSOLIDATION RUN  {time.strftime('%Y-%m-%d %H:%M')}"
-        + (f"   [--only {only}]" if only else ""))
+        + (f"   [--only {args.only}]" if only else "")
+        + ("   [--full-fleet]" if args.full_fleet else "")
+        + ("   [--save-preds]" if args.save_preds else ""))
     for q, pp in PARAMS.items():
         log(f"  q={q}: n_estimators={pp['n_estimators']}, "
             f"lr={pp['learning_rate']:.4f}, leaves={pp['num_leaves']}, "
@@ -475,20 +516,20 @@ def main():
     # with everything still in memory - nothing on disk, two hours lost.
     def dump(name, obj):
         obj.to_csv(OUT / f"{name}.csv", index=False)
-        with open(C.REPORTS_DIR / "consolidated_report.txt", "w",
+        with open(C.REPORTS_DIR / f"{OUT.name}_report.txt", "w",
                   encoding="utf-8") as fh:
             fh.write("\n".join(LOG))
         log(f"  [saved {name}.csv]")
 
-    if only in (None, "exp0"):
+    if only is None or "exp0" in only:
         e0 = exp0_objective_sensitivity(df)
         dump("exp0_objective_sensitivity", e0)
 
-    if only in (None, "exp1"):
+    if only is None or "exp1" in only:
         e1 = exp1_oracle(df)
         dump("exp1_oracle", e1)
 
-    if only in (None, "exp2"):
+    if only is None or "exp2" in only:
         ac, reg_fc, reg_obs, sse = exp2_decomposition(df)
         for n_, o_ in (("exp2_autocorr", ac),
                        ("exp2_regime_forecast_binned", reg_fc),
@@ -496,16 +537,16 @@ def main():
                        ("exp2_sse_share", sse)):
             dump(n_, o_)
 
-    if only in (None, "exp3"):
+    if only is None or "exp3" in only:
         e3 = exp3_ensemble(df)
         dump("exp3_ensemble_ablation", e3)
 
-    if only in (None, "exp4"):
+    if only is None or "exp4" in only:
         e4, recal = exp4_arms_and_recal(df)
         dump("exp4_arms", e4)
         dump("exp4_recalibration", recal)
 
-    if only in (None, "exp5"):
+    if only is None or "exp5" in only:
         zs, cb, piv, piv2 = exp5_loso(df)
         dump("exp5_loso_per_system", zs)
         dump("exp5_calibration_sweep", cb)
@@ -515,9 +556,9 @@ def main():
     banner("DONE")
     log(f"elapsed {(time.time()-t0)/60:.1f} min")
     log(f"CSVs -> {OUT}")
-    with open(C.REPORTS_DIR / "consolidated_report.txt", "w", encoding="utf-8") as f:
+    with open(C.REPORTS_DIR / f"{OUT.name}_report.txt", "w", encoding="utf-8") as f:
         f.write("\n".join(LOG))
-    print(f"\nWrote {C.REPORTS_DIR / 'consolidated_report.txt'}")
+    print(f"\nWrote {C.REPORTS_DIR / (OUT.name + '_report.txt')}")
 
 
 if __name__ == "__main__":

@@ -4,9 +4,9 @@
 \subsection{Where the limit lies}
 \label{sec:res-limit}
 
-\textbf{Selection objective (E0).} Selecting hyperparameters under the pinball loss instead of RMSE lowers mean pinball loss from 0.02545 to 0.02529 ($-0.66\%$) and MAE from 0.0682 to 0.0673 ($-1.4\%$), and raises skill from 0.4311 to 0.4351. The gain sits where theory puts it: pinball loss falls 1.4\% at P50 and 0.45\% at P90 and rises 0.1\% at P25. Squared error targets the conditional mean, so the preliminary configuration suited the tails least. The skill gain, +0.0040, is about 60\% of what the ensemble feature adds (+0.0065; Section~\ref{sec:res-widening}).
+\textbf{Selection objective (E0).} Selecting hyperparameters under the pinball loss instead of RMSE lowers mean pinball loss from 0.02600 to 0.02580 ($-0.77\%$) and MAE from 0.0694 to 0.0686 ($-1.2\%$), and raises skill from 0.4163 to 0.4194 (+0.0031, 95\% CI +0.0018 to +0.0045; Diebold--Mariano $p < 0.001$). Pinball loss falls 1.2\% at P50, 1.0\% at P90 and 0.1\% at P25. The objective alone is worth more than half of what the ensemble feature adds (+0.0055; Section~\ref{sec:res-widening}).
 
-\textbf{Fleet oracle (E1).} Adding the contemporaneous output of every other rooftop raises $R^2$ from 0.7998 to 0.8226 and skill from 0.4194 to 0.4535 (Fig.~\ref{fig:ceiling}a). Perfect regional weather knowledge is therefore worth 0.0228 in $R^2$. With the oracle, geometry and metadata but no NWP, the model reaches $R^2$ 0.7076 and skill 0.2983. Knowing what the regional sky did recovers most of what the operational model achieves; NWP adds about 0.09 in $R^2$ beyond it. Regional-scale weather information is thus largely extracted already, and what remains unexplained is not regional.
+\textbf{Fleet oracle (E1).} Adding the contemporaneous output of every other rooftop raises $R^2$ from 0.7998 to 0.8226 (95\% CI of the gain +0.0145 to +0.0322) and skill from 0.4194 to 0.4535 (Fig.~\ref{fig:ceiling}a). With the oracle, geometry and metadata but no NWP, the model reaches $R^2$ 0.7076 and skill 0.2983. Knowing what the regional sky did recovers most of what the operational model achieves; NWP adds about 0.09 in $R^2$ beyond it. Regional-scale weather information is thus largely extracted already, and what remains unexplained is not regional.
 
 \textbf{Residual structure (E2).} Residual autocorrelation is 0.715 at 15~min, 0.556 at 30~min, 0.407 at 1~h and 0.236 at 2~h, and falls to 0.015 at 24~h (Fig.~\ref{fig:ceiling}b). An error that is smooth over hours and uncorrelated from day to day is neither bias nor noise. It is the signature of a cloud field displaced in time or space. It also explains why persistence-based and day-to-day bias corrections fail here: yesterday's error says almost nothing about today's.
 
@@ -20,7 +20,7 @@
 \subsection{Where the error lives}
 \label{sec:res-location}
 
-Accuracy depends strongly on cloud (Fig.~\ref{fig:error}a). Binned by forecast clear-sky index, $R^2$ is 0.847 for clear slots ($n = 97{,}845$), but 0.440 in the 0.2--0.4 band and 0.480 in the 0.4--0.6 band. Overcast slots give 0.572 on a target standard deviation of only 0.063. Clear skies supply more than half the daylight slots and carry the pooled score; in broken cloud, where a storage controller most needs accuracy, the model explains under half the variance. Binning by the observed index reverses the sign of the conditional bias (overcast MBE +0.009 by forecast bins, $-0.068$ by observed bins), which matters when comparing with studies that condition on observed sky.
+Accuracy depends strongly on cloud (Fig.~\ref{fig:error}a). Binned by forecast clear-sky index, $R^2$ is 0.847 for clear slots ($n = 97{,}845$), but 0.440 in the 0.2--0.4 band and 0.480 in the 0.4--0.6 band. Overcast slots give 0.572 on a target standard deviation of only 0.063. Clear skies supply over half the daylight slots and carry the pooled score; in broken cloud the model explains under half the variance. Binning by the observed index reverses the sign of the overcast bias (MBE +0.009 against $-0.068$).
 
 The irradiance forecast shows the same pattern against SARAH-3 (Fig.~\ref{fig:error}b). Absolute error is largest in partly cloudy conditions (RMSE 101.2~W\,m$^{-2}$) and smallest under overcast (54.9~W\,m$^{-2}$), but relative to available light the order reverses: nMAE is 36.8\% overcast, 32.4\% partly cloudy and 13.3\% clear.
 
@@ -36,24 +36,24 @@ The error belongs to the weather model, not to the rooftop (Fig.~\ref{fig:error}
 \subsection{Widening the weather input}
 \label{sec:res-widening}
 
-Table~\ref{tab:ablation} gives the ensemble ablation (E3). Only the multi-model mean improves every metric: skill rises from 0.4285 to 0.4351 and pinball loss falls from 0.02558 to 0.02529. Averaging ECMWF's own runs from one to three days before the target gives skill 0.4291, within noise of the baseline. Re-runs of one model are staler but not independent; centres differ in physics and therefore in error. Ensemble dispersion as a predictor lowers skill (0.4280), raises pinball loss by 1.6\% and lowers P25--P90 coverage from 0.622 to 0.592. The quantile model already infers conditional uncertainty from the clear-sky index and solar geometry, so dispersion adds mostly noise. All ten ensemble features together give a slightly higher $R^2$ but worse pinball loss and the lowest coverage (0.590).
+Table~\ref{tab:ablation} gives the ensemble ablation (E3). Only the multi-model mean improves $R^2$, skill and pinball loss with intervals that exclude zero: skill rises from 0.4139 to 0.4194 (+0.0055, 95\% CI +0.0001 to +0.0106) and pinball loss falls from 0.02606 to 0.02580. Averaging ECMWF's own runs from one to three days before the target gives skill 0.4141, indistinguishable from the baseline ($p = 0.88$). Re-runs of one model are staler but not independent; centres differ in physics and therefore in error. Ensemble dispersion as a predictor lowers skill (0.4130), raises pinball loss by 1.6\% ($p < 0.001$) and lowers P25--P90 coverage from 0.619 to 0.589. The quantile model already infers conditional uncertainty from the clear-sky index and solar geometry, so dispersion adds mostly noise. All ten ensemble features together give a slightly higher $R^2$ but worse pinball loss ($p = 0.03$) and equally low coverage (0.589).
 
 \begin{table}[!htb]
 \centering
-\caption{Ensemble ablation on the chronological split, 32 systems.}
+\caption{Ensemble ablation on the chronological split, 33 systems. $p$: Diebold--Mariano test of daily pinball loss against the base.}
 \label{tab:ablation}
 \small
-\begin{tabularx}{\textwidth}{@{}X c c c c@{}}
+\begin{tabularx}{\textwidth}{@{}X c c c c c@{}}
 \toprule
-Feature set & Features & $R^2$ & Skill & Pinball \\
+Feature set & Features & $R^2$ & Skill & Pinball & $p$ \\
 \midrule
-Base & 12 & 0.8070 & 0.4285 & 0.02558 \\
-\textbf{+ multi-model mean (6 centres)} & 13 & \textbf{0.8114} & \textbf{0.4351} & \textbf{0.02529} \\
-+ mean of all 12 members & 13 & 0.8078 & 0.4298 & 0.02552 \\
-+ ensemble-mean POA & 13 & 0.8081 & 0.4301 & 0.02554 \\
-+ lagged mean (ECMWF, days 1--3) & 13 & 0.8074 & 0.4291 & 0.02559 \\
-+ ensemble spread only & 17 & 0.8066 & 0.4280 & 0.02598 \\
-+ all 10 ensemble features & 22 & 0.8089 & 0.4314 & 0.02582 \\
+Base & 12 & 0.7960 & 0.4139 & 0.02606 & -- \\
+\textbf{+ multi-model mean (6 centres)} & 13 & \textbf{0.7998} & \textbf{0.4194} & \textbf{0.02580} & 0.01 \\
++ mean of all 12 members & 13 & 0.7963 & 0.4143 & 0.02603 & 0.77 \\
++ ensemble-mean POA & 13 & 0.7966 & 0.4148 & 0.02605 & 0.96 \\
++ lagged mean (ECMWF, days 1--3) & 13 & 0.7961 & 0.4141 & 0.02609 & 0.35 \\
++ ensemble spread only & 17 & 0.7954 & 0.4130 & 0.02649 & $<0.001$ \\
++ all 10 ensemble features & 22 & 0.7971 & 0.4155 & 0.02636 & 0.03 \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -61,10 +61,16 @@ Base & 12 & 0.8070 & 0.4285 & 0.02558 \\
 \subsection{Proposed configuration and calibration}
 \label{sec:res-config}
 
-Table~\ref{tab:ablation} uses 32 systems because one rooftop was excluded (E4). With all 33 systems and no ensemble feature, $R^2$ is 0.7960 and skill 0.4139. Excluding system 81376 raises $R^2$ by 0.0110; adding the ensemble feature raises it by a further 0.0044, to 0.8114 (skill 0.4351). Two-thirds of the total gain comes from removing one rooftop. System 81376 holds 3.08\% of test rows but 7.69\% of squared error. Its defect is time-varying: in April--May 2026, inside the test window, its output relative to the fleet median fell to 0.60, against 0.85 and 0.89 in the same months of 2024 and 2025. This 31\% drop is the largest in the fleet (median $-3\%$), so no capacity value fixed during training can absorb it.
+The proposed configuration (E4) is the base features plus the multi-model mean on all 33 systems: $R^2$ 0.7998, skill 0.4194, pinball loss 0.02580. One rooftop, 81376, holds 3.08\% of test rows but 7.69\% of squared error. Its defect is time-varying: in April--May 2026, inside the test window, its output relative to the fleet median fell to 0.60, against 0.85 and 0.89 in the same months of 2024 and 2025. This 31\% drop is the largest in the fleet (median $-3\%$), so no capacity value fixed during training can absorb it. The defect was found after the test errors were seen, and no pre-test signal exists: in the validation months its fleet-relative output rose rather than fell. Excluding it is therefore only a sensitivity analysis. With 32 systems, $R^2$ rises by 0.0116 to 0.8114 and skill to 0.4351, and the ensemble feature adds +0.0065 skill (95\% CI +0.0011 to +0.0118). A single faulty installation thus moves the pooled score about three times as much as the best weather-input change.
+%% Validation-period ratio of 81376 (system_drift_monthly.csv): Sep-Feb 2025/26 0.73, 0.84, 1.00, 1.08, 1.20, 0.98 vs 0.73, 0.69, 0.82, 0.80, 0.76, 0.78 a year earlier.
 %% Source: v3_ensemble/src/eval/system_drift.py (season-matched April-May comparison).
 
-Raw quantiles are over-confident at the upper tail: empirical coverage of the nominal P90 is 0.869 (Fig.~\ref{fig:recal}). Three offsets fitted on validation ($+0.0004$, $+0.0022$ and $+0.0105$ for P25, P50 and P90) bring coverage to 0.263, 0.520 and 0.912 against nominal 0.25, 0.50 and 0.90. Mean pinball loss is unchanged (0.02529 to 0.02527), and P25--P90 coverage moves from 0.614 to 0.649 against the nominal 0.65. The small over-coverage at P90 reflects validation-to-test drift and errs on the safe side for storage scheduling.
+Raw quantiles are over-confident at the upper tail: empirical coverage of the nominal P90 is 0.868 (Fig.~\ref{fig:recal}). Three offsets fitted on validation ($+0.0004$, $+0.0024$ and $+0.0110$ for P25, P50 and P90) bring coverage to 0.267, 0.523 and 0.913 against nominal 0.25, 0.50 and 0.90. Mean pinball loss is unchanged (0.02580 to 0.02578, $p = 0.64$), and P25--P90 coverage moves from 0.610 to 0.646 against the nominal 0.65. The small over-coverage at P90 reflects validation-to-test drift and errs on the safe side for storage scheduling.
+
+\ifepsr
+%% [EPSR-SCOPE] grid-facing aggregation; source v3_ensemble/src/eval/grid_aggregate.py
+\textbf{Aggregated forecasts.} Grid users act on sums of rooftops. Summing the P50 forecasts lowers normalised RMSE from 11.1\% of installed capacity for the median rooftop to 6.6--8.6\% for the five regional sums of 4--8 rooftops and 5.0\% for all 33, and raises skill from 0.44 to 0.48--0.53 and 0.59. Daily energy imbalance falls less, from 11.9\% to 8.4\% of the day's energy, because displaced cloud is coherent across a region (Section~\ref{sec:res-limit}) and cancels only partly.
+\fi
 
 \begin{figure}[!htb]
 \centering
@@ -79,34 +85,34 @@ Raw quantiles are over-confident at the upper tail: empirical coverage of the no
 \textbf{Reference.} Over the study window, the same ECMWF forecast scored against ERA5 has RMSE 51.1~W\,m$^{-2}$ and bias $-1.5$~W\,m$^{-2}$; against SARAH-3 it has 86.6~W\,m$^{-2}$ and $+9.2$~W\,m$^{-2}$. ERA5 understates RMSE by a factor of 1.69 (relative RMSE 16.5\% against 29.0\%) and reverses the sign of the bias. An external check supports the satellite figure: its bias is close to the +8~W\,m$^{-2}$ that \citet{Tuononen2019} measured for ECMWF IFS with ground instruments over four years at a comparable latitude.
 %% Source: v3_ensemble/src/eval/reference_comparison.py (253,419 hourly rows, 31 systems; RMSE 86.63 vs 51.14, rRMSE 28.99 vs 16.52).
 
-\textbf{Irradiance stage.} Against SARAH-3, random forest lowers MAE from 55.49 to 51.96~W\,m$^{-2}$ ($-6.4\%$) and RMSE from 86.27 to 81.94~W\,m$^{-2}$, raising $R^2$ from 0.866 to 0.879. Ridge regression barely changes MAE ($-0.5\%$) but cuts the bias from +11.40 to +0.88~W\,m$^{-2}$, which shows the bias is systematic. LightGBM and XGBoost make MAE worse ($-0.6\%$ and $-1.9\%$). Against ERA5, every learner degrades the forecast (MAE $-1.0\%$ to $-9.6\%$), because the raw bias against ERA5 is only +0.81~W\,m$^{-2}$ and there is nothing to learn. Trained against a reanalysis from the same model, MOS appears ineffective for the wrong reason.
+\textbf{Irradiance stage.} Against SARAH-3, random forest lowers MAE from 55.49 to 51.96~W\,m$^{-2}$ ($-6.4\%$) and RMSE from 86.27 to 81.94~W\,m$^{-2}$, raising $R^2$ from 0.866 to 0.879. Ridge regression barely changes MAE ($-0.5\%$) but cuts the bias from +11.40 to +0.88~W\,m$^{-2}$, which shows the bias is systematic. Against ERA5, every learner degrades the forecast (MAE $-1.0\%$ to $-9.6\%$), because the raw bias against ERA5 is only +0.81~W\,m$^{-2}$ and there is nothing to learn. Trained against a reanalysis from the same model, MOS appears ineffective for the wrong reason.
 
-\textbf{Power stage, seen rooftops.} The out-of-fold correction lowers test MAE from 55.49 to 52.13~W\,m$^{-2}$ ($-6.1\%$) and bias from +11.40 to +3.12~W\,m$^{-2}$ ($-73\%$). In the PV model it changes $R^2$ from 0.8114 to 0.8111 and skill from 0.4351 to 0.4346, and raises pinball loss from 0.02529 to 0.02539. Adding the correction as two extra features instead is slightly worse (0.8109, 0.4344, 0.02549).
+\textbf{Power stage, seen rooftops.} The out-of-fold correction lowers test MAE from 55.49 to 52.13~W\,m$^{-2}$ ($-6.1\%$) and bias from +11.40 to +3.12~W\,m$^{-2}$ ($-73\%$). In the PV model it changes $R^2$ from 0.7998 to 0.7995 (95\% CI of the change $-0.0015$ to $+0.0009$) and skill from 0.4194 to 0.4190, and raises pinball loss from 0.02580 to 0.02592 ($p = 0.04$). Adding the correction as two extra features instead leaves $R^2$ and skill unchanged (0.7998, 0.4194) and raises pinball loss further (0.02599). Without 81376 the result is the same ($R^2$ 0.8114 to 0.8111).
 
-\textbf{Power stage, unseen rooftops.} On a rooftop absent from training, the model cannot have absorbed that rooftop's share of the bias, so MOS should matter more. It does not. Across 33 held-out rooftops the median change is +0.00012 in $R^2$ and +0.00016 in skill; 17 of 33 rooftops improve, and changes range from $-0.0166$ to $+0.0361$. The largest gains are on 94362 (+0.0361) and 81376 (+0.0196), two of the worst-transferring rooftops, where the irradiance correction partly offsets a capacity error (Section~\ref{sec:res-deploy}); neither becomes usable. After 30 days of capacity + bias calibration, median skill is 0.3281 with MOS and 0.3230 without.
+\textbf{Power stage, unseen rooftops.} On a rooftop absent from training, the model cannot have absorbed that rooftop's share of the bias, so MOS should matter more. It does not. Across 33 held-out rooftops the median change is +0.00012 in $R^2$ and +0.00016 in skill; 17 of 33 rooftops improve (Wilcoxon $p = 0.74$), and changes range from $-0.0166$ to $+0.0361$. The largest gains are on 94362 (+0.0361) and 81376 (+0.0196), two of the worst-transferring rooftops, where the irradiance correction partly offsets a capacity error (Section~\ref{sec:res-deploy}); neither becomes usable. After 30 days of capacity + bias calibration, median skill is 0.3281 with MOS and 0.3230 without.
 
 The reason is proportion. MOS removes about 8~W\,m$^{-2}$ of systematic bias, but RMSE falls only from 86.3 to 82.2~W\,m$^{-2}$. The remainder is the displacement error of Section~\ref{sec:res-limit}, which no statistical bias correction can reach, and the PV model has already fitted around the systematic part.
 
 \subsection{Deployment on an unseen rooftop}
 \label{sec:res-deploy}
 
-A rooftop absent from training receives median $R^2$ 0.704 and skill 0.347, against 0.811 and 0.435 pooled over known rooftops on the chronological split. The tail matters more than the median: mean $R^2$ is 0.658, the 10th percentile 0.497 and the worst $-0.158$. Two of 33 rooftops, about one in sixteen, score worse than persistence.
+A rooftop absent from training receives median $R^2$ 0.704 and skill 0.347, against 0.800 and 0.419 pooled over known rooftops on the chronological split. The tail matters more than the median: mean $R^2$ is 0.658, the 10th percentile 0.497 and the worst $-0.158$. Two of 33 rooftops, about one in sixteen, score worse than persistence.
 
-\textbf{Hyperparameters for transfer.} Table~\ref{tab:transfer} and Fig.~\ref{fig:deploy} compare three configurations on the same 33 rooftops. The configuration that wins on the chronological split is the worst on unseen rooftops: mean $R^2$ 0.588, worst case $-0.985$, five failures. Selecting against held-out systems leaves the median almost unchanged but raises the 10th percentile from 0.308 to 0.496, lifts the worst rooftop to $-0.156$ and halves the failures. The transfer configuration has depth 4 and L2 penalty 4.34, against depth 15 and 0.008 for the temporal one. A depth-4 tree cannot encode rooftop identity and must learn what rooftops share.
-%% Table 4 comes from tune_transfer.py (fixed seed); the E5 values above from consolidate.py (default seed). Same configuration; the 0.005 difference in median R2 is bagging-seed variation.
+\textbf{Hyperparameters for transfer.} Table~\ref{tab:transfer} and Fig.~\ref{fig:deploy} compare three configurations on the same 33 rooftops. The configuration that wins on the chronological split is the worst on unseen rooftops: mean $R^2$ 0.588, worst case $-0.94$, four to five failures. Selecting against held-out systems leaves the median almost unchanged but raises the 10th percentile from 0.312 to 0.499, lifts the worst rooftop to $-0.15$ and halves the failures. It is better on 22 of 33 rooftops (Wilcoxon $p = 0.001$ on seed-averaged $R^2$). The transfer configuration has depth 4 and L2 penalty 4.34, against depth 15 and 0.008 for the temporal one. A depth-4 tree cannot encode rooftop identity and must learn what rooftops share.
+%% Table 4: src/models/loso_seeds.py (models/revision/loso_seeds_summary.csv); Fig. 8 and the E5 values: single-seed runs (tune_transfer.py, consolidate.py).
 
 \begin{table}[!htb]
 \centering
-\caption{Zero-shot $R^2$ and skill on 33 held-out rooftops for three hyperparameter configurations. Failures: skill $\le 0$.}
+\caption{Zero-shot $R^2$ and skill on 33 held-out rooftops for three hyperparameter configurations, mean (standard deviation) over random seeds: five for the transfer configuration, three for the others. Failures: skill $\le 0$.}
 \label{tab:transfer}
 \small
-\begin{tabularx}{\textwidth}{@{}X c c c c c c@{}}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X c c c c c c@{}}
 \toprule
 Configuration & Median & Mean & P10 & Worst & Median skill & Failures \\
 \midrule
-Preliminary (RMSE, temporal) & 0.719 & 0.603 & 0.378 & $-0.709$ & 0.293 & 4 \\
-Tuned on temporal split & 0.708 & 0.588 & 0.308 & $-0.985$ & 0.316 & 5 \\
-\textbf{Tuned on held-out systems} & 0.710 & \textbf{0.657} & \textbf{0.496} & $\mathbf{-0.156}$ & \textbf{0.340} & \textbf{2} \\
+Preliminary (RMSE, temporal) & 0.720 (0.004) & 0.600 (0.004) & 0.368 (0.011) & $-0.78$ (0.07) & 0.310 (0.014) & 4.0 (0.0) \\
+Tuned on temporal split & 0.707 (0.003) & 0.588 (0.003) & 0.312 (0.017) & $-0.94$ (0.06) & 0.312 (0.005) & 4.7 (0.6) \\
+\textbf{Tuned on held-out systems} & 0.711 (0.006) & \textbf{0.658 (0.002)} & \textbf{0.499 (0.003)} & $\mathbf{-0.15}$ \textbf{(0.01)} & \textbf{0.343 (0.002)} & \textbf{2.0 (0.0)} \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -114,11 +120,11 @@ Tuned on temporal split & 0.708 & 0.588 & 0.308 & $-0.985$ & 0.316 & 5 \\
 \begin{figure}[!htb]
 \centering
 \includegraphics[width=\textwidth]{figures/fig8_deployment.pdf}
-\caption{Zero-shot $R^2$ on 33 held-out rooftops for three configurations. (a) Distributions with individual rooftops. (b) Median, 10th percentile and worst case.}
+\caption{Zero-shot $R^2$ on 33 held-out rooftops for three configurations. (a) Distributions with individual rooftops. (b) Median, 10th percentile and worst case. One seed; seed spread in Table~\ref{tab:transfer}.}
 \label{fig:deploy}
 \end{figure}
 
-\textbf{Rated capacity.} On unseen rooftops, the capacity ratio $P_{99}/C_\mathrm{p}$ (Section~\ref{sec:data-meta}) correlates with forecast bias at +0.709. The model learns the fleet-average relation between output and nameplate. A rooftop whose nameplate overstates its real capacity is over-forecast, and one whose nameplate understates it is under-forecast. On the chronological split this is hidden, because the model memorises each rooftop's scale. The lowest ratio in the fleet, 0.568, belongs to 94362 ($R^2$ 0.067); the worst rooftop, 81376 ($R^2$ $-0.158$), has a ratio of 0.693, also in the lowest fifth.
+\textbf{Rated capacity.} On unseen rooftops, the capacity ratio $P_{99}/C_\mathrm{p}$ (Section~\ref{sec:data-meta}) correlates with forecast bias at +0.709. The model learns the fleet-average relation between output and nameplate. A rooftop whose nameplate overstates its real capacity is over-forecast, and one whose nameplate understates it is under-forecast. On the chronological split this is hidden, because the model memorises each rooftop's scale. The lowest ratio in the fleet, 0.568, belongs to 94362 ($R^2$ 0.067); the worst rooftop, 81376 ($R^2$ $-0.158$), has a ratio of 0.693, also in the lowest fifth. The physical chain (Section~\ref{sec:meth-task}), which learns nothing, shows the same dependence: its bias correlates with the capacity ratio at +0.845. Run from nameplate metadata on the same 33 rooftops it reaches median $R^2$ 0.608, with a worst case of $-1.44$ and eight failures, and the zero-shot learner beats it on 32 of them.
 
 \textbf{Local calibration (E5).} Fig.~\ref{fig:calib} shows median skill against the length of the local window. Below about 30 days every correction is harmful: at 3 days, linear rescaling gives skill $-0.110$ against 0.347 uncorrected, because two parameters are fitted to a window that may contain no clear day. From 30 days, correction helps and linear rescaling is best, by +0.009 skill at 30 days, +0.022 at 45 and +0.053 at 60. Median $R^2$ rises from 0.704 at day 0 to 0.755 with linear rescaling at 45 days. The operating rule is no correction before 30 days of local history, then linear rescaling on a rolling window.
 
@@ -132,4 +138,4 @@ Tuned on temporal split & 0.708 & 0.588 & 0.308 & $-0.985$ & 0.316 & 5 \\
 \subsection{Comparison with published results}
 \label{sec:res-compare}
 
-Cross-study comparison is unreliable. Accuracy depends on climate, horizon, resolution, aggregation and plant type, and on conventions: the same forecast here has normalised RMSE of 11.0\% of capacity but 38.0\% of mean output. Skill depends on the reference \citep{Yang2019}. \citet{Visser2019}, for example, report skill against smart persistence, a stronger reference than the plain persistence used here, so the two skills are not comparable. Utility-scale probabilistic results such as \citet{MayerYang2023} use a different normaliser and score. The comparisons that do hold are qualitative: tree ensembles were also the best learners on 152 distributed systems \citep{Visser2019}; input outweighs model family at day-ahead \citep{Nguyen2026}; and the 30-day calibration threshold has the same order of magnitude as the two months a local model needs in \citet{Depoortere2025}. The bias check in Section~\ref{sec:res-mos} supports the measurement chain. We do not claim higher accuracy than published work: Section~\ref{sec:res-limit} shows the accuracy of any learner here is bounded by the input.
+Cross-study comparison is unreliable. Accuracy depends on climate, horizon, resolution, aggregation and plant type, and on conventions: the same forecast here has normalised RMSE of 11.3\% of capacity but 39.4\% of mean output. Skill depends on the reference \citep{Yang2019}. \citet{Visser2019}, for example, report skill against smart persistence. At this horizon the two references are close here (smart persistence scores skill $-0.005$ against plain persistence), but climate and aggregation still differ. The comparisons that do hold are qualitative: tree ensembles were also the best learners on 152 distributed systems \citep{Visser2019}; input outweighs model family at day-ahead \citep{Nguyen2026}; and the 30-day calibration threshold has the same order of magnitude as the two months a local model needs in \citet{Depoortere2025}. We do not claim higher accuracy than published work: Section~\ref{sec:res-limit} shows the accuracy of any learner here is bounded by the input.

@@ -21,6 +21,11 @@
 \usepackage{lineno}
 %\linenumbers
 
+%% Journal switch. EPSR-specific text is wrapped in \ifepsr ... \else ... \fi
+%% and tagged [EPSR-SCOPE]. For another journal set \epsrfalse (see JOURNAL_NOTES.md).
+\newif\ifepsr
+\epsrtrue
+
 \journal{Electric Power Systems Research}
 
 \begin{document}

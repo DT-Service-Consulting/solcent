@@ -175,6 +175,18 @@ class MultiQuantileLGBM:
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--full-fleet", action="store_true",
+                    help="keep system 81376; writes mos_pv_integration_metrics_full.csv")
+    ap.add_argument("--save-preds", action="store_true",
+                    help="write each arm's test predictions to models/revision/preds/")
+    args = ap.parse_args()
+    suffix = "_full" if args.full_fleet else ""
+    pred_dir = C.MODELS_DIR / "revision" / "preds"
+    if args.save_preds:
+        pred_dir.mkdir(parents=True, exist_ok=True)
+
     print("Building MOS table ...", flush=True)
     d = build_mos_table()
     print(f"  rows={len(d):,} systems={d.system_id.nunique()}", flush=True)
@@ -193,7 +205,8 @@ def main():
 
     print("\nApplying correction to the 15-minute grid ...", flush=True)
     pv = apply_to_grid(ratio)
-    pv = pv[~pv.system_id.isin(C.BROKEN_SYSTEMS)]
+    if not args.full_fleet:
+        pv = pv[~pv.system_id.isin(C.BROKEN_SYSTEMS)]
 
     prev = pv[["system_id", "timestamp", C.TARGET]].copy()
     prev["timestamp"] += pd.Timedelta(days=1)
@@ -233,21 +246,31 @@ def main():
             "P25_P90_coverage": M.coverage(y, P[0.25], P[0.90]),
         }
         rows.append(r)
+        if args.save_preds:
+            slug = "".join(ch if ch.isalnum() else "_" for ch in label.lower()).strip("_")
+            while "__" in slug:
+                slug = slug.replace("__", "_")
+            slug = slug.replace("_best_v3_config", "")
+            pd.DataFrame({
+                "system_id": te2.system_id.to_numpy(), "timestamp": te2.timestamp.to_numpy(),
+                "y": y, "persistence": te2.pred_persistence.to_numpy(),
+                "p25": P[0.25], "p50": P[0.50], "p90": P[0.90],
+            }).to_csv(pred_dir / f"mos{suffix}__{slug}.csv.gz", index=False)
         print(f"    R2={r['R2']:.4f}  skill={r['skill']:.4f}  "
               f"pinball={r['mean_pinball']:.5f}", flush=True)
 
     res = pd.DataFrame(rows).round(5)
-    res.to_csv(C.MODELS_DIR / "mos_pv_integration_metrics.csv", index=False)
+    res.to_csv(C.MODELS_DIR / f"mos_pv_integration_metrics{suffix}.csv", index=False)
     print("\n" + "=" * 74)
     print("DOES BETTER IRRADIANCE MAKE A BETTER PV FORECAST?")
     print("=" * 74)
     print(res.to_string(index=False))
     print("\nParent project, using ERA5-trained MOS: 0.8035 with vs 0.8029 without.")
 
-    with open(C.REPORTS_DIR / "mos_pv_integration_report.txt", "w", encoding="utf-8") as f:
+    with open(C.REPORTS_DIR / f"mos_pv_integration_report{suffix}.txt", "w", encoding="utf-8") as f:
         f.write("MOS -> PV integration, satellite-trained MOS\n" + "=" * 74 + "\n\n")
         f.write(res.to_string(index=False) + "\n")
-    print(f"\nWrote {C.MODELS_DIR / 'mos_pv_integration_metrics.csv'}")
+    print(f"\nWrote {C.MODELS_DIR / ('mos_pv_integration_metrics' + suffix + '.csv')}")
 
 
 if __name__ == "__main__":
