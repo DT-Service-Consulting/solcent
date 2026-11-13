@@ -32,7 +32,8 @@ sys.path.insert(0, str(ROOT / "v3_ensemble"))
 import config as C
 
 OUT = Path(__file__).resolve().parent
-D = C.MODELS_DIR / "consolidated"
+# full-fleet run (33 systems): the primary configuration of the paper
+D = C.MODELS_DIR / "consolidated_full"
 
 plt.rcParams.update({
     "figure.dpi": 150, "savefig.dpi": 300,
@@ -60,11 +61,12 @@ def save(fig, name):
 # ---------------------------------------------------------------------------
 def fig4_ceiling():
     o = pd.read_csv(D / "exp1_oracle.csv")
-    ac = pd.read_csv(D / "exp2_autocorr.csv")
+    # true time lags (residual_autocorr.py); exp2_autocorr.csv shifted by daylight rows
+    ac = pd.read_csv(C.MODELS_DIR / "revision" / "residual_autocorr.csv")
     fig, axes = plt.subplots(1, 2, figsize=(7.1, 2.8))
 
     ax = axes[0]
-    lab = ["NWP forecast\n(operational)", "+ oracle\n(regional truth)",
+    lab = ["NWP forecast\n(operational)", "+ fleet oracle\n(fleet-wide output)",
            "oracle + geometry\n(no NWP)"]
     vals = o.R2.values
     bars = ax.bar(range(3), vals, color=[MID, ACC, BLUE], width=0.6)
@@ -73,12 +75,12 @@ def fig4_ceiling():
     gap = vals[1] - vals[0]
     ax.annotate("", xy=(0.3, vals[0]), xytext=(0.3, vals[1]),
                 arrowprops=dict(arrowstyle="<->", color=ACC, lw=0.9))
-    ax.text(0.40, (vals[0] + vals[1]) / 2, f"+{gap:.4f}", color=ACC,
-            fontsize=7.5, va="center")
+    ax.text(0.3, vals[1] + 0.006, f"+{gap:.4f}", color=ACC,
+            fontsize=7.5, ha="center")
     ax.set_xticks(range(3), lab, fontsize=6.8)
     ax.set_ylabel("$R^2$ on the test split")
     ax.set_ylim(0.65, 0.88)
-    ax.set_title("(a) value of perfect regional weather truth", loc="left")
+    ax.set_title("(a) value of fleet-wide weather knowledge", loc="left")
 
     ax = axes[1]
     ax.plot(ac.lag_min, ac.autocorr, "o-", color=INK, ms=4, lw=1.0)
@@ -107,9 +109,15 @@ def fig5_where_error_lives():
     ax.bar(x, reg.R2, color=[ACC if v < 0.6 else MID for v in reg.R2], width=0.62)
     for i, v in enumerate(reg.R2):
         ax.text(i, v + 0.015, f"{v:.3f}", ha="center", fontsize=6.4)
-    ax.set_xticks(x, [r.replace(" ", "\n") for r in reg.regime], fontsize=6.2)
+    # tick labels: keep only the index range ("overcast <0.2" -> "<0.2")
+    ax.set_xticks(x, [r.split(" ")[-1].replace("-", "\N{EN DASH}\n") for r in reg.regime], fontsize=6.2)
+    ax.set_xlabel("forecast clear-sky index")
     ax.set_ylabel("$R^2$")
     ax.set_ylim(0, 1.0)
+    from matplotlib.patches import Patch
+    ax.legend(handles=[Patch(color=ACC, label="$R^2$ < 0.6"),
+                       Patch(color=MID, label="$R^2$ $\\geq$ 0.6")],
+              frameon=False, loc="upper left", fontsize=6.2)
     ax.set_title("(a) PV forecast by sky condition", loc="left")
 
     ax = axes[1]
@@ -131,12 +139,18 @@ def fig5_where_error_lives():
     ax.set_ylabel("RMSE (W m$^{-2}$)")
     ax2.set_ylabel("nMAE (%)", color=ACC)
     ax2.tick_params(axis="y", colors=ACC)
-    ax.set_title("(b) irradiance error, absolute vs relative", loc="left")
+    h1, l1 = ax.get_legend_handles_labels()
+    h2, l2 = ax2.get_legend_handles_labels()
+    ax.legend(h1 + h2, l1 + l2, frameon=False, loc="upper center", ncol=2,
+              fontsize=6.2, handlelength=1.0, columnspacing=0.8)
+    ax.set_ylim(0, 140)
+    ax2.set_ylim(0, 140 * agg.nMAE.max() / agg.RMSE.max() * 1.0)
+    ax.set_title("(b) irradiance error vs SARAH-3", loc="left")
 
     ax = axes[2]
     piv = w.pivot(index="system_id", columns="regime", values="RMSE")[order]
     pos = [piv[o].dropna().values for o in order]
-    bp = ax.boxplot(pos, labels=[o.replace(" ", "\n") for o in order],
+    bp = ax.boxplot(pos, tick_labels=[o.replace(" ", "\n") for o in order],
                     patch_artist=True, widths=0.5, showfliers=False)
     for p in bp["boxes"]:
         p.set_facecolor(MID)
@@ -149,7 +163,7 @@ def fig5_where_error_lives():
                 fontsize=6.4, color=ACC)
     ax.set_ylabel("forecast RMSE (W m$^{-2}$)")
     ax.tick_params(axis="x", labelsize=6.2)
-    ax.set_title("(c) spread across 31 rooftops\n(std/median in red)", loc="left")
+    ax.set_title(f"(c) spread across {len(piv)} rooftops\n(std/median in red)", loc="left")
 
     fig.tight_layout()
     save(fig, "fig5_error_location")
@@ -169,22 +183,24 @@ def fig6_ensemble():
         "+ spread features only": "+ ensemble spread only",
         "+ all 10 ensemble features": "+ all 10 ensemble features",
         "+ lagged mean (day1-3)": "+ lagged mean (ECMWF d1-d3)",
+        "+ ens_mean_fresh5 (5 centres, no UKMO)": "+ multi-model mean (5 centres, no UKMO)",
     }
     y = np.arange(len(e))
     cols = [ACC if "mean_fresh" in c else
             (BLUE if "spread" in c else MID) for c in e.config]
     ax.barh(y, e.skill, color=cols, height=0.62)
     ax.axvline(base.skill, color=INK, ls="--", lw=0.9)
-    ax.text(base.skill + 0.0004, len(e) - 0.4, "baseline", fontsize=6.6,
-            color=INK, rotation=90, va="top")
+    lo = e.skill.min() - 0.0015
+    ax.text(base.skill + 0.0001, len(e) - 0.45, "base", fontsize=6.6,
+            color=INK, va="top")
     for i, (s, p) in enumerate(zip(e.skill, e.mean_pinball)):
-        ax.text(s + 0.0006, i, f"{s:.4f}   pinball {p:.5f}", va="center",
+        ax.text(s + 0.0002, i, f"{s:.4f}   pinball {p:.5f}", va="center",
                 fontsize=6.5)
     ax.set_yticks(y, [short.get(c, c) for c in e.config], fontsize=7)
     ax.set_xlabel("skill score vs persistence")
-    ax.set_xlim(0.424, 0.4425)
-    ax.set_title("Ensemble ablation — only multi-model averaging at a single "
-                 "lead time helps", loc="left")
+    ax.set_xlim(lo, e.skill.max() + 0.0045)
+    ax.set_title("Ensemble ablation — the multi-model mean at one lead time "
+                 "helps most", loc="left")
     fig.tight_layout()
     save(fig, "fig6_ensemble_ablation")
 
@@ -201,13 +217,13 @@ def fig7_calibration():
     ax.plot(r.nominal, r.coverage_before, "o-", color=ACC, ms=5,
             label="raw quantile regression")
     ax.plot(r.nominal, r.coverage_after, "s-", color=GREEN, ms=5,
-            label="after conformal offset")
+            label="after offset recalibration")
     for _, row in r.iterrows():
         ax.annotate(f"{row.coverage_before:.3f}", (row.nominal, row.coverage_before),
                     textcoords="offset points", xytext=(6, -9), fontsize=6.2,
                     color=ACC)
         ax.annotate(f"{row.coverage_after:.3f}", (row.nominal, row.coverage_after),
-                    textcoords="offset points", xytext=(6, 5), fontsize=6.2,
+                    textcoords="offset points", xytext=(-30, 6), fontsize=6.2,
                     color=GREEN)
     ax.set_xlabel("nominal quantile level")
     ax.set_ylabel("empirical coverage")
@@ -234,7 +250,12 @@ def fig7_calibration():
 
 # ---------------------------------------------------------------------------
 def fig8_deployment():
-    tc = pd.read_csv(C.MODELS_DIR / "tuned" / "transfer_comparison.csv")
+    # seed-averaged zero-shot R2 per rooftop (loso_seeds.py: 5 seeds transfer, 3 others)
+    ls = pd.read_csv(C.MODELS_DIR / "revision" / "loso_seeds_per_system.csv")
+    cfg = {"preliminary": "inherited (RMSE, temporal)", "temporal": "tuned on temporal split",
+           "transfer": "tuned on held-out systems"}
+    tc = (ls.groupby(["config", "system_id"], as_index=False).R2.mean()
+            .assign(config=lambda x: x.config.map(cfg)))
     name = {"inherited (RMSE, temporal)": "inherited\n(RMSE, temporal)",
             "tuned on temporal split": "tuned on\ntemporal split",
             "tuned on held-out systems": "tuned on\nheld-out systems"}
@@ -244,7 +265,7 @@ def fig8_deployment():
 
     ax = axes[0]
     data = [tc[tc.config == c].R2.values for c in order]
-    bp = ax.boxplot(data, labels=[name[c] for c in order], patch_artist=True,
+    bp = ax.boxplot(data, tick_labels=[name[c] for c in order], patch_artist=True,
                     widths=0.5, showfliers=False)
     for i, (p, c) in enumerate(zip(bp["boxes"], order)):
         p.set_facecolor(ACC if "held-out" in c else MID)

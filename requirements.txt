@@ -16,3 +16,5 @@ seaborn
 openmeteo_requests
 requests_cache
 retry_requests
+lightgbm==4.6.0
+optuna

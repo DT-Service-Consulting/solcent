@@ -19,7 +19,14 @@ V3_ROOT      = Path(__file__).resolve().parent
 PROJECT_ROOT = V3_ROOT.parent
 
 # Read-only inputs borrowed from the parent project
-PARENT_MODEL_READY = PROJECT_ROOT / "data" / "processed" / "model_ready.csv"
+# The parent model_ready.csv placed each hourly Open-Meteo irradiance value at the
+# END of the hour it averages, so NWP irradiance lagged the target by ~30 min.
+# src/features/fix_irradiance_timing.py rebuilds those columns with the correct
+# time reference (hour-centred, evaluated at 15-min slot centres) and writes the
+# copy below; every v3 build reads it. The original is kept, untouched, as
+# PARENT_MODEL_READY_ORIG.
+PARENT_MODEL_READY_ORIG = PROJECT_ROOT / "data" / "processed" / "model_ready.csv"
+PARENT_MODEL_READY = V3_ROOT / "data" / "processed" / "model_ready_parent_timefix.csv"
 PARENT_META        = PROJECT_ROOT / "data" / "interim" / "pvoutput_selection" / "systems_metadata.csv"
 PARENT_SHORTLIST   = PROJECT_ROOT / "data" / "interim" / "pvoutput_selection" / "shortlist_final.csv"
 

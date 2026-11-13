@@ -54,6 +54,8 @@ PAIRS = [
      "exp1__baseline_nwp_only", "exp1__oracle_geometry_no_nwp"),
     ("E3: + multi-model mean vs base (33 systems)",
      "exp3__base_only_12", "exp3__ens_mean_fresh_6_day_1_models"),
+    ("E3: + multi-model mean, 5 centres without UKMO, vs base",
+     "exp3__base_only_12", "exp3__ens_mean_fresh5_5_centres_no_ukmo"),
     ("E3: + mean of all 12 members vs base",
      "exp3__base_only_12", "exp3__ens_ghi_mean_all_12_members"),
     ("E3: + ensemble-mean POA vs base",

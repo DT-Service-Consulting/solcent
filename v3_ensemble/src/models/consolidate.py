@@ -256,11 +256,17 @@ def exp2_decomposition(df):
     t = t.sort_values(["system_id", "timestamp"])
 
     log("\n-- residual autocorrelation --")
+    # pair each residual with the same system's residual exactly `lag` earlier.
+    # (Shifting by rows was wrong: rows are daylight only, so 96 rows ~ 46 h.)
     ac = []
-    for k in (1, 2, 4, 8, 96):
-        v = t.res.corr(t.groupby("system_id").res.shift(k))
-        ac.append({"lag_slots": k, "lag_min": k * 15, "autocorr": v})
-        log(f"  lag {k:3d} slots ({k*15:5d} min): {v:.3f}")
+    r0 = t[["system_id", "timestamp", "res"]]
+    for k in (1, 2, 4, 8, 96, 192):
+        lagged = r0.copy()
+        lagged["timestamp"] = lagged.timestamp + pd.Timedelta(minutes=15 * k)
+        m_ = r0.merge(lagged, on=["system_id", "timestamp"], suffixes=("", "_lag"))
+        v = m_.res.corr(m_.res_lag)
+        ac.append({"lag_slots": k, "lag_min": k * 15, "n_pairs": len(m_), "autocorr": v})
+        log(f"  lag {k*15:5d} min: {v:.3f}  (n={len(m_):,})")
 
     log("\n-- by FORECAST clear-sky index --")
     reg_fc = M.regime_table(t, C.TARGET, "pred", "clearsky_index_fc")
@@ -296,10 +302,17 @@ def exp3_ensemble(df):
     d = d.copy()
     if lag:
         d["ens_mean_lag13"] = d[lag].mean(axis=1)
+    # five centres with full coverage (UK Met Office, 83.4% coverage, left out),
+    # so the multi-model mean has constant membership over time (review item)
+    five = [c for c in ("ghi_lag1", "ghi_icon_seamless", "ghi_gfs_seamless",
+                        "ghi_meteofrance_seamless", "ghi_dmi_seamless") if c in d.columns]
+    if len(five) == 5:
+        d["ens_mean_fresh5"] = d[five].mean(axis=1)
 
     arms = {
         "base only (12)": base,
         "+ ens_mean_fresh (6 day-1 models)": base + ["ens_mean_fresh"],
+        "+ ens_mean_fresh5 (5 centres, no UKMO)": base + ["ens_mean_fresh5"],
         "+ ens_ghi_mean (all 12 members)": base + ["ens_ghi_mean"],
         "+ poa_ens_mean": base + ["poa_ens_mean"],
         "+ spread features only": base + spread,

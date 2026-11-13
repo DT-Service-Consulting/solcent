@@ -1,17 +1,17 @@
 \section{Conclusions}
 \label{sec:conclusions}
 
-Day-ahead forecasting for individual residential rooftops is limited by the NWP input, not by the learner. Four independent tests on 33 Belgian rooftops support this:
+For rooftops seen in training, day-ahead forecasting is limited mainly by the NWP input. Four analyses on 33 Belgian rooftops, over a February--May test window, are consistent with this:
 \begin{enumerate}
-\item perfect regional weather knowledge adds only 0.023 in $R^2$;
-\item residuals decorrelate within a day, the signature of displaced cloud;
-\item irradiance error is nearly identical across rooftops up to 210~km apart;
-\item removing 73\% of the irradiance bias leaves PV accuracy unchanged on seen and unseen rooftops.
+\item knowledge of the local sky would add at least 0.065 in $R^2$, fleet-wide knowledge only 0.019;
+\item residuals decorrelate within a day, consistent with cloud-field error;
+\item irradiance error is equally large at every rooftop but correlated only over tens of kilometres;
+\item removing 70\% of the irradiance bias leaves PV accuracy unchanged on seen and unseen rooftops.
 \end{enumerate}
 
-Within that limit, gains are small. Averaging forecasts across six centres helps; averaging one centre's re-runs does not, and ensemble dispersion hurts. Recalibration gives honest P90 coverage (0.913) at no cost in accuracy.
+Within that limit, gains are small. Averaging forecasts across six centres helps; averaging one centre's re-runs does not, and ensemble dispersion hurts. Recalibration fixes P90 coverage (0.916) but worsens P25 and P50 and leaves pinball loss unchanged.
 
-Two results apply beyond this dataset. Validating against a reanalysis from the same model understates RMSE 1.69-fold and reverses the bias. Hyperparameters chosen where every unit is seen transfer poorly; selecting them against held-out systems halves the failures on unseen rooftops.
+Two results apply beyond this dataset. Validating against a reanalysis from the same model understates RMSE 1.39-fold relative to an independent satellite record. Hyperparameters chosen where every unit is seen transfer poorly; selecting them against held-out systems halves the failures on unseen rooftops.
 
 %% [EPSR-SCOPE] power-system framing for Electric Power Systems Research; see JOURNAL_NOTES.md
-\ifepsr For grid operators and aggregators, a\else A\fi\ newly connected rooftop should be expected to perform well below chronological-split figures (median $R^2$ 0.704 against 0.800). Local calibration should wait for about 30 days of history. Transfer failures follow the installation record, chiefly rated capacity, rather than the weather. Effort is therefore better spent on higher-resolution NWP and on metadata inference and screening than on further changes of learner.
+\ifepsr For grid operators and aggregators, a\else A\fi\ newly connected rooftop should be expected to perform below chronological-split figures (median $R^2$ 0.741 against 0.804). Its own recent output and effective capacity matter more than its reported metadata. Linear rescaling helps after about a week of local history, or a month when that week falls in a fast seasonal transition. Higher-resolution NWP for seen rooftops, and capacity estimation and metadata screening for unseen ones, are the most promising next steps.

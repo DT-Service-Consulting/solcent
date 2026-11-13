@@ -24,6 +24,7 @@
 !/models/consolidated/*.csv
 !/models/consolidated_full/*.csv
 !/models/revision/*.csv
+!/models/review/*.csv
 !/models/tuned/*.json
 !/models/tuned/*.csv
 !/models/loso_*.csv
@@ -37,6 +38,9 @@
 /models/mos_satellite_corrected.csv
 /models/v3_predictions_test.csv
 /models/revision/preds/
+
+# Results from before the irradiance timing correction, kept locally for comparison only
+/models/pre_timefix/
 
 __pycache__/
 *.py[cod]

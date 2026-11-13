@@ -63,7 +63,7 @@ def load():
     m = sysmeta.merge(
         raw[["system_id", "latitude", "longitude", "region", "orientation", "shade"]],
         on="system_id")
-    zs = pd.read_csv(C.MODELS_DIR / "consolidated" / "exp5_loso_per_system.csv")
+    zs = pd.read_csv(C.MODELS_DIR / "consolidated_full" / "exp5_loso_per_system.csv")
     m = m.merge(zs[["system_id", "cap_ratio", "cap_obs_kw"]], on="system_id", how="left")
     return m
 

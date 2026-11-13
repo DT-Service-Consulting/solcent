@@ -1,11 +1,11 @@
 arm,model,n,MAE,RMSE,MBE,rRMSE_%,R2,MAE_reduction_%,RMSE_reduction_%
-SARAH-3 satellite (independent),RAW ECMWF (no MOS),37012,55.491,86.274,11.404,25.061,0.866,0.0,0.0
-SARAH-3 satellite (independent),Ridge,37012,55.193,83.139,0.879,24.15,0.876,0.537,3.634
-SARAH-3 satellite (independent),Random Forest,37012,51.957,81.944,3.725,23.803,0.879,6.368,5.019
-SARAH-3 satellite (independent),LightGBM,37012,55.823,86.356,2.146,25.085,0.866,-0.6,-0.095
-SARAH-3 satellite (independent),XGBoost,37012,56.552,86.482,0.929,25.122,0.866,-1.913,-0.242
-"ERA5 (parent's original target, control)",RAW ECMWF (no MOS),37012,24.51,40.942,0.809,11.538,0.968,0.0,0.0
-"ERA5 (parent's original target, control)",Ridge,37012,24.744,41.136,1.129,11.592,0.968,-0.955,-0.473
-"ERA5 (parent's original target, control)",Random Forest,37012,24.805,42.135,0.424,11.874,0.966,-1.203,-2.914
-"ERA5 (parent's original target, control)",LightGBM,37012,25.604,43.626,0.922,12.294,0.964,-4.461,-6.555
-"ERA5 (parent's original target, control)",XGBoost,37012,26.854,45.57,-0.721,12.842,0.961,-9.564,-11.302
+SARAH-3 satellite (independent),RAW ECMWF (no MOS),40771,58.629,90.167,12.182,26.686,0.854,0.0,0.0
+SARAH-3 satellite (independent),Ridge,40771,60.54,87.781,-7.514,25.98,0.862,-3.259,2.647
+SARAH-3 satellite (independent),Random Forest,40771,56.525,87.857,-2.002,26.002,0.862,3.589,2.562
+SARAH-3 satellite (independent),LightGBM,40771,58.921,89.888,-4.99,26.603,0.855,-0.498,0.31
+SARAH-3 satellite (independent),XGBoost,40771,59.893,90.869,-5.269,26.894,0.852,-2.156,-0.778
+"ERA5 (parent's original target, control)",RAW ECMWF (no MOS),40771,39.833,63.46,9.02,18.608,0.921,0.0,0.0
+"ERA5 (parent's original target, control)",Ridge,40771,42.158,62.656,-9.024,18.372,0.923,-5.838,1.266
+"ERA5 (parent's original target, control)",Random Forest,40771,43.993,67.928,-10.986,19.918,0.91,-10.445,-7.04
+"ERA5 (parent's original target, control)",LightGBM,40771,45.233,68.697,-11.495,20.143,0.907,-13.556,-8.253
+"ERA5 (parent's original target, control)",XGBoost,40771,45.721,69.994,-12.506,20.523,0.904,-14.781,-10.296

@@ -60,6 +60,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 import config as C
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from eval import metrics as M
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "features"))
+import mos_table  # day-ahead hourly table (replaces mos_training_data.csv)
 
 from sklearn.ensemble import RandomForestRegressor
 import lightgbm as lgb
@@ -83,25 +85,7 @@ def mos_model(n_estimators=120):
 
 
 def build_mos_table():
-    mos = pd.read_csv(C.PROJECT_ROOT / "data" / "interim" / "mos_training_data.csv")
-    mos["timestamp"] = pd.to_datetime(mos["timestamp"], utc=True)
-    mos = mos.dropna(subset=["system_id", "ecmwf_ghi"])
-    mos["system_id"] = mos["system_id"].astype(int)
-    mos = mos[~mos.system_id.isin(C.EXCLUDE_SYSTEMS)]
-
-    sat = pd.read_csv(C.DATA_INTERIM / "satellite_ghi_all.csv")
-    sat["timestamp"] = pd.to_datetime(sat["time"], utc=True)
-    sat = sat[["system_id", "timestamp", "sat_ghi"]].dropna(subset=["sat_ghi"])
-
-    geo = pd.read_csv(C.MODEL_READY_V3, usecols=[
-        "system_id", "timestamp", "clearsky_ghi", "sun_elevation",
-        "hour_sin", "hour_cos", "doy_sin", "doy_cos", "split"])
-    geo["timestamp"] = pd.to_datetime(geo["timestamp"], utc=True)
-
-    d = mos.merge(sat, on=["system_id", "timestamp"], how="inner")
-    d = d.merge(geo, on=["system_id", "timestamp"], how="inner")
-    d = d[d.sun_elevation > 5].reset_index(drop=True)
-    d["kt_fc"] = (d.ecmwf_ghi / (d.clearsky_ghi + EPS)).clip(0, 1.3)
+    d = mos_table.build().copy()
     d["error_target"] = d.sat_ghi - d.ecmwf_ghi
     return d.sort_values("timestamp").reset_index(drop=True)
 
@@ -153,11 +137,9 @@ def apply_ratio_to_grid(pv, ratio_hourly):
         if r.empty:
             g["mos_ratio"] = 1.0
         else:
-            s = r.set_index("timestamp")["mos_ratio"].sort_index()
-            s = s[~s.index.duplicated()]
-            g["mos_ratio"] = (s.reindex(s.index.union(g.index))
-                                .interpolate("time", limit_direction="both")
-                                .reindex(g.index).to_numpy())
+            # hourly ratio refers to the hour it averages; map to slot centres
+            g["mos_ratio"] = mos_table.ratio_to_grid(
+                r.set_index("timestamp")["mos_ratio"], g.index)
         blocks.append(g.reset_index())
     out = pd.concat(blocks, ignore_index=True)
     out["mos_ratio"] = out["mos_ratio"].fillna(1.0).clip(0.2, 3.0)

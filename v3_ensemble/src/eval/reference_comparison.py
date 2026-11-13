@@ -13,8 +13,8 @@ forecast minus reference, positive = over-forecast, the same convention as
 mos_satellite.py and Tuononen et al. 2019) and relative RMSE for each reference, and the ratio
 of the two RMSEs.
 
-Rows are the MOS table of mos_satellite.py (hourly, sun elevation > 5 deg,
-both references present), all splits.
+Rows are the day-ahead MOS table (features/mos_table.py: hourly, sun elevation
+> 5 deg at the hour centre, both references present), all splits.
 
 Output: v3_ensemble/reports/reference_comparison.txt
 """
@@ -27,27 +27,13 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 import config as C
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "features"))
+import mos_table  # day-ahead hourly table (replaces mos_training_data.csv)
 
 
 def build():
-    """Same row selection as mos_satellite.build(), without the model imports."""
-    mos = pd.read_csv(C.PROJECT_ROOT / "data" / "interim" / "mos_training_data.csv")
-    mos["timestamp"] = pd.to_datetime(mos["timestamp"], utc=True)
-    mos = mos.dropna(subset=["system_id", "actual_ghi", "ecmwf_ghi"])
-    mos["system_id"] = mos["system_id"].astype(int)
-    mos = mos[~mos.system_id.isin(C.EXCLUDE_SYSTEMS)]
-    mos = mos.rename(columns={"actual_ghi": "era5_ghi"})
-
-    sat = pd.read_csv(C.DATA_INTERIM / "satellite_ghi_all.csv")
-    sat["timestamp"] = pd.to_datetime(sat["time"], utc=True)
-    sat = sat[["system_id", "timestamp", "sat_ghi"]].dropna(subset=["sat_ghi"])
-
-    geo = pd.read_csv(C.MODEL_READY_V3, usecols=["system_id", "timestamp", "sun_elevation"])
-    geo["timestamp"] = pd.to_datetime(geo["timestamp"], utc=True)
-
-    df = mos.merge(sat, on=["system_id", "timestamp"], how="inner")
-    df = df.merge(geo, on=["system_id", "timestamp"], how="inner")
-    return df[df.sun_elevation > 5].reset_index(drop=True)
+    """Day-ahead ECMWF, SARAH-3 and ERA5 on identical hourly rows (mos_table.py)."""
+    return mos_table.build()
 
 
 def score(truth, fc):
@@ -63,12 +49,28 @@ def score(truth, fc):
 
 def main():
     df = build()
+    coarse = C.DATA_INTERIM / "satellite_ghi_025_all.csv"
+    refs = [("SARAH-3", "sat_ghi"), ("ERA5", "era5_ghi")]
+    if coarse.exists():
+        # SARAH-3 averaged over the forecast's 0.25-degree cell (fetch_sarah_coarse.py),
+        # scored on the same rows, so the resolution mismatch is removed
+        c = pd.read_csv(coarse)
+        c["timestamp"] = pd.to_datetime(c["time"], utc=True)
+        df = df.merge(c[["system_id", "timestamp", "sat_ghi_025"]],
+                      on=["system_id", "timestamp"], how="inner").dropna(subset=["sat_ghi_025"])
+        refs.append(("SARAH-3, 0.25 deg cell mean", "sat_ghi_025"))
     rows = []
-    for name, col in [("SARAH-3", "sat_ghi"), ("ERA5", "era5_ghi")]:
+    for name, col in refs:
         rows.append({"reference": name, **score(df[col], df["ecmwf_ghi"])})
     r = pd.DataFrame(rows)
     ratio_rmse = r.RMSE.iloc[0] / r.RMSE.iloc[1]
     ratio_rrmse = r["rRMSE_%"].iloc[0] / r["rRMSE_%"].iloc[1]
+    extra = []
+    if len(r) == 3:
+        extra = [f"RMSE ratio  SARAH-3 0.25 / ERA5 : {r.RMSE.iloc[2] / r.RMSE.iloc[1]:.3f}",
+                 f"rRMSE ratio SARAH-3 0.25 / ERA5 : {r['rRMSE_%'].iloc[2] / r['rRMSE_%'].iloc[1]:.3f}"]
+    r.to_csv(C.MODELS_DIR / "review" / "reference_comparison.csv", index=False) \
+        if (C.MODELS_DIR / "review").exists() else None
 
     lines = [
         "ECMWF day-ahead GHI scored against two references (whole window)",
@@ -79,7 +81,7 @@ def main():
         "",
         f"RMSE ratio  SARAH-3 / ERA5 : {ratio_rmse:.3f}",
         f"rRMSE ratio SARAH-3 / ERA5 : {ratio_rrmse:.3f}",
-    ]
+    ] + extra
     text = "\n".join(lines)
     print(text)
     (C.REPORTS_DIR / "reference_comparison.txt").write_text(text + "\n", encoding="utf-8")

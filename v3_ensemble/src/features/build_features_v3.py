@@ -11,13 +11,13 @@ a baseline trained here is directly comparable to the parent's numbers.
 
 INTERPOLATION
 -------------
-Members arrive hourly; the model grid is 15-minute. We reuse the parent's
-physics-aware method verbatim: convert each member to a clear-sky index
-Kt = GHI / (clearsky + eps), interpolate Kt linearly in time, then rebuild
-15-minute GHI as Kt * (clearsky_15min + eps). Interpolating Kt instead of raw
-GHI preserves the shape of the solar curve between hourly samples.
-Clear-sky GHI is taken from the parent table, so the two builds stay
-bit-consistent on geometry.
+Members arrive hourly; the model grid is 15-minute. Each hourly value is the
+mean over the PRECEDING hour (Open-Meteo convention), so it is converted to a
+clear-sky index against the clear-sky mean over that hour, placed at the hour
+centre, interpolated linearly in time to the 15-minute slot centres and
+multiplied by clear-sky there (src/features/irradiance_timing.py). The
+original build placed each value at the end of its hour, a ~30 min lag.
+Interpolating Kt instead of raw GHI preserves the shape of the solar curve.
 
 POA APPROXIMATION
 -----------------
@@ -49,6 +49,9 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 import config as C
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import irradiance_timing as T
+import pvlib
 
 EPS = 1.0          # matches the parent build exactly
 
@@ -59,21 +62,16 @@ def member_columns(ens):
     return lag, multi
 
 
-def interp_member(series_hourly, cs_hourly, cs_grid, grid):
-    """Hourly member GHI -> 15-min GHI via clear-sky-index interpolation.
+def interp_member(series_hourly, cs_hour_mean, centres, cs_centres):
+    """Hourly member GHI (preceding-hour means) -> 15-min GHI at slot centres.
 
-    limit_direction="both" fills the grid edges: the parent grid runs to
-    23:45 local on the final day while the hourly member series stops at
-    23:00 UTC, so without it the last slot of every system is NaN.
-    Members are clipped at 0 - Kt interpolation can dip slightly negative
-    around sunrise/sunset where the eps guard dominates.
+    limit_direction="both" (inside irradiance_timing) fills the grid edges: the
+    parent grid runs to 23:45 local on the final day while the hourly member
+    series stops at 23:00 UTC. Output is clipped at 0.
     """
-    kt = series_hourly / (cs_hourly + EPS)
-    kt = (kt.reindex(kt.index.union(grid))
-            .interpolate("time", limit_direction="both")
-            .reindex(grid))
-    out = kt.to_numpy() * (cs_grid + EPS)
-    return np.clip(out, 0.0, None).astype("float32")
+    ok = series_hourly.notna()
+    return T.hourly_mean_to_instants(series_hourly[ok], cs_hour_mean[ok],
+                                     centres, cs_centres).astype("float32")
 
 
 def build():
@@ -95,6 +93,7 @@ def build():
     print(f"  members: {len(all_members)}  lagged={len(lag_cols)} multi={len(multi_cols)}", flush=True)
     print(f"  {all_members}", flush=True)
 
+    meta = pd.read_csv(C.PARENT_META).drop_duplicates("system_id").set_index("system_id")
     out_blocks = []
     for sid, g in df.groupby("system_id", sort=True):
         e = ens[ens.system_id == sid]
@@ -105,17 +104,18 @@ def build():
 
         g = g.set_index("timestamp").sort_index()
         grid = g.index
-        cs_grid = g["clearsky_ghi"].to_numpy(dtype="float64")
-
-        # clear-sky at the member (hourly) stamps, taken from the parent grid
-        cs_hourly = g["clearsky_ghi"].reindex(
-            g.index.union(e.index)).interpolate("time").reindex(e.index)
+        loc = pvlib.location.Location(float(meta.loc[sid, "latitude"]),
+                                      float(meta.loc[sid, "longitude"]), tz="UTC")
+        centres = T.slot_centres(grid)
+        # clear-sky at the slot centres, and its mean over each member hour
+        cs_grid = loc.get_clearsky(centres, model="ineichen")["ghi"].to_numpy(dtype="float64")
+        cs_hourly = T.clearsky_hour_means(loc, e.index, ("ghi",))["ghi"]
 
         mat = np.full((len(grid), len(all_members)), np.nan, dtype="float32")
         for j, col in enumerate(all_members):
             if col not in e.columns or e[col].isna().all():
                 continue
-            mat[:, j] = interp_member(e[col], cs_hourly, cs_grid, grid)
+            mat[:, j] = interp_member(e[col], cs_hourly, centres, cs_grid)
             g[col] = mat[:, j]
 
         lag_idx = [all_members.index(c) for c in lag_cols if c in all_members]

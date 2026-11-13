@@ -70,6 +70,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 import config as C
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from eval import metrics as M
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "features"))
+import mos_table  # day-ahead hourly table (replaces mos_training_data.csv)
 
 from sklearn.linear_model import Ridge
 from sklearn.ensemble import RandomForestRegressor
@@ -90,28 +92,8 @@ EPS = 1.0
 
 
 def build():
-    """Join forecast, both truth sources, and geometry into one table."""
-    mos = pd.read_csv(C.PROJECT_ROOT / "data" / "interim" / "mos_training_data.csv")
-    mos["timestamp"] = pd.to_datetime(mos["timestamp"], utc=True)
-    mos = mos.dropna(subset=["system_id", "actual_ghi", "ecmwf_ghi"])
-    mos["system_id"] = mos["system_id"].astype(int)
-    mos = mos[~mos.system_id.isin(C.EXCLUDE_SYSTEMS)]
-    mos = mos.rename(columns={"actual_ghi": "era5_ghi"})
-
-    sat = pd.read_csv(C.DATA_INTERIM / "satellite_ghi_all.csv")
-    sat["timestamp"] = pd.to_datetime(sat["time"], utc=True)
-    sat = sat[["system_id", "timestamp", "sat_ghi"]].dropna(subset=["sat_ghi"])
-
-    geo = pd.read_csv(C.MODEL_READY_V3, usecols=[
-        "system_id", "timestamp", "clearsky_ghi", "sun_elevation",
-        "hour_sin", "hour_cos", "doy_sin", "doy_cos", "split"])
-    geo["timestamp"] = pd.to_datetime(geo["timestamp"], utc=True)
-
-    df = mos.merge(sat, on=["system_id", "timestamp"], how="inner")
-    df = df.merge(geo, on=["system_id", "timestamp"], how="inner")
-    df = df[df.sun_elevation > 5].reset_index(drop=True)
-    df["kt_fc"] = (df.ecmwf_ghi / (df.clearsky_ghi + EPS)).clip(0, 1.3)
-    return df.sort_values(["timestamp", "system_id"]).reset_index(drop=True)
+    """Day-ahead ECMWF, SARAH-3 and ERA5 on identical hourly rows (mos_table.py)."""
+    return mos_table.build()
 
 
 def make_models():
