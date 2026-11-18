@@ -11,7 +11,7 @@ For rooftops seen in training, day-ahead forecasting is limited mainly by the NW
 
 Within that limit, gains are small. Averaging forecasts across six centres helps; averaging one centre's re-runs does not, and ensemble dispersion hurts. Recalibration fixes P90 coverage (0.916) but worsens P25 and P50 and leaves pinball loss unchanged.
 
-Two results apply beyond this dataset. Validating against a reanalysis from the same model understates RMSE 1.39-fold relative to an independent satellite record. Hyperparameters chosen where every unit is seen transfer poorly; selecting them against held-out systems halves the failures on unseen rooftops.
+Two results should generalise beyond this dataset. Validating against a reanalysis from the same model understates RMSE 1.39-fold relative to an independent satellite record. Hyperparameters chosen where every unit is seen transfer poorly; selecting them against held-out systems halves the failures on unseen rooftops.
 
 %% [EPSR-SCOPE] power-system framing for Electric Power Systems Research; see JOURNAL_NOTES.md
 \ifepsr For grid operators and aggregators, a\else A\fi\ newly connected rooftop should be expected to perform below chronological-split figures (median $R^2$ 0.741 against 0.804). Its own recent output and effective capacity matter more than its reported metadata. Linear rescaling helps after about a week of local history, or a month when that week falls in a fast seasonal transition. Higher-resolution NWP for seen rooftops, and capacity estimation and metadata screening for unseen ones, are the most promising next steps.

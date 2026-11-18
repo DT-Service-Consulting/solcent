@@ -207,9 +207,15 @@ def fig6_ensemble():
 
 # ---------------------------------------------------------------------------
 def fig7_calibration():
-    r = pd.read_csv(D / "exp4_recalibration.csv")
-    # full fleet (33 systems, base + ensemble mean): the primary configuration
-    r = r[r.config.str.startswith("B ")]
+    # proposed configuration (33 systems, base + ensemble mean) with the P10
+    # model added (review_experiments.py p10); P25/P50/P90 match exp4 arm B
+    p = pd.read_csv(C.MODELS_DIR / "review" / "p10_sharpness.csv")
+    p = p[pd.to_numeric(p["quantile"], errors="coerce").notna()].copy()
+    p["nominal"] = p["quantile"].astype(float)
+    raw = p[p.version == "raw"].set_index("nominal").coverage
+    rec = p[p.version == "recalibrated"].set_index("nominal").coverage
+    r = pd.DataFrame({"nominal": raw.index, "coverage_before": raw.values,
+                      "coverage_after": rec.reindex(raw.index).values})
     fig, axes = plt.subplots(1, 2, figsize=(7.1, 2.7))
 
     ax = axes[0]
@@ -222,20 +228,22 @@ def fig7_calibration():
         ax.annotate(f"{row.coverage_before:.3f}", (row.nominal, row.coverage_before),
                     textcoords="offset points", xytext=(6, -9), fontsize=6.2,
                     color=ACC)
+        if abs(row.coverage_after - row.coverage_before) < 0.002:
+            continue                      # P10: offset negligible, one label is enough
         ax.annotate(f"{row.coverage_after:.3f}", (row.nominal, row.coverage_after),
                     textcoords="offset points", xytext=(-30, 6), fontsize=6.2,
                     color=GREEN)
     ax.set_xlabel("nominal quantile level")
     ax.set_ylabel("empirical coverage")
-    ax.set_xlim(0.15, 1.0)
-    ax.set_ylim(0.15, 1.0)
+    ax.set_xlim(0.0, 1.0)
+    ax.set_ylim(0.0, 1.0)
     ax.legend(frameon=False, loc="upper left")
     ax.set_title("(a) reliability", loc="left")
 
     ax = axes[1]
     gap_b = (r.coverage_before - r.nominal).values
     gap_a = (r.coverage_after - r.nominal).values
-    xx = np.arange(3)
+    xx = np.arange(len(r))
     ax.bar(xx - 0.19, gap_b, 0.36, color=ACC, label="raw")
     ax.bar(xx + 0.19, gap_a, 0.36, color=GREEN, label="recalibrated")
     ax.axhline(0, color=INK, lw=0.8)

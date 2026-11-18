@@ -1,0 +1,526 @@
+%% Body of the supplementary material. Included by supplementary.tex (standalone)
+%% and appended to main.tex when \withsupptrue (review copies).
+%% S-numbering for sections and tables; works standalone and appended to main.tex
+\setcounter{section}{0}
+\setcounter{table}{0}
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\theHsection}{S\arabic{section}}
+\renewcommand{\theHtable}{S\arabic{table}}
+
+Section and table numbers in the main text are referred to as ``main text''. All values come from the analysis repository (tag \texttt{v1.4-paper}); the source file is given under each table. Paths are relative to \path{v3_ensemble/}. Every result uses the timing-corrected irradiance features (main text, Section~3.3) and, for irradiance scoring, the hourly day-ahead ECMWF forecast.
+
+%% ---------------------------------------------------------------------------
+\section{Experiments}
+\label{sec:s-experiments}
+
+\begin{table}[!htb]
+\centering
+\caption{Experiments of the main text. R: robustness checks reported in this supplement. Split: T, chronological; L, leave-one-system-out.}
+\label{tab:experiments}
+\small
+\begin{tabularx}{\textwidth}{@{}l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X l@{}}
+\toprule
+ID & Question & Varied & Split \\
+\midrule
+E0 & Does the selection objective matter? & RMSE vs pinball selection & T \\
+E1 & What is better weather knowledge worth? & oracle scope; NWP present or absent & T \\
+E2 & Where does the residual error live? & stratification; distance & T \\
+E3 & Which input widening helps? & feature subset (7 arms) & T \\
+E4 & What is the proposed configuration worth? & ensemble feature; system 81376; recalibration & T \\
+E5 & What does an unseen rooftop receive? & held-out system; calibration window and method & L \\
+MOS & Does irradiance correction reach power? & raw or corrected irradiance & T, L \\
+R & Are the results robust? & site features; season; calibration start & T, L \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%% ---------------------------------------------------------------------------
+\section{Headline arms and recalibration}
+\label{sec:s-arms}
+
+\begin{table}[!htb]
+\centering
+\caption{Headline arms on the chronological test split, before and after offset recalibration. Systems: 33 = full fleet, 32 = system 81376 excluded. Source: \path{models/consolidated_full/exp4_arms.csv}.}
+\label{tab:s-arms}
+\small
+\begin{tabularx}{\textwidth}{@{}l X c c c c c@{}}
+\toprule
+Arm & Configuration & Systems & $R^2$ & Skill & Pinball & P25--P90 cov. \\
+\midrule
+A & Base (12 features) & 33 & 0.7992 & 0.4184 & 0.02583 & 0.618 \\
+  & \quad recalibrated & 33 & 0.7995 & 0.4190 & 0.02579 & 0.656 \\
+B & Base + multi-model mean (proposed) & 33 & 0.8038 & 0.4251 & 0.02551 & 0.610 \\
+  & \quad recalibrated & 33 & 0.8039 & 0.4254 & 0.02551 & 0.644 \\
+D & Base (12 features) & 32 & 0.8105 & 0.4337 & 0.02531 & 0.621 \\
+  & \quad recalibrated & 32 & 0.8109 & 0.4343 & 0.02527 & 0.658 \\
+C & Base + multi-model mean & 32 & 0.8152 & 0.4408 & 0.02501 & 0.612 \\
+  & \quad recalibrated & 32 & 0.8155 & 0.4412 & 0.02500 & 0.645 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Arms C and D exclude system 81376 as a sensitivity analysis. Its defect is time-varying and was found after the test errors were seen. Its April--May output relative to the fleet median was 0.85 in 2024 and 0.89 in 2025, but 0.60 in 2026 (test window), the largest drop in the fleet (fleet median change $-3\%$); during the validation months its fleet-relative output rose. With 32 systems the multi-model mean adds +0.0072 skill (95\% CI +0.0019 to +0.0126). Source: \path{src/eval/system_drift.py}, \path{models/system_drift_monthly.csv}.
+
+%% ---------------------------------------------------------------------------
+\section{Probabilistic detail: P10 and sharpness}
+\label{sec:s-p10}
+
+\begin{table}[!htb]
+\centering
+\caption{Coverage (share of observations below each quantile) and pinball loss of the proposed configuration on the chronological test split, with the P10 model (fitted with the temporal P25 hyperparameters). Width: mean distance between the quantiles, in units of capacity. Source: \path{src/models/review_experiments.py} (\texttt{p10}), \path{models/review/p10_sharpness.csv}.}
+\label{tab:s-p10}
+\small
+\begin{tabular}{@{}l c c c c@{}}
+\toprule
+ & \multicolumn{2}{c}{Raw} & \multicolumn{2}{c}{Recalibrated} \\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
+Quantile & Coverage & Pinball & Coverage & Pinball \\
+\midrule
+P10 & 0.125 & 0.0156 & 0.125 & 0.0156 \\
+P25 & 0.262 & 0.0274 & 0.272 & 0.0274 \\
+P50 & 0.494 & 0.0338 & 0.531 & 0.0339 \\
+P90 & 0.869 & 0.0153 & 0.916 & 0.0152 \\
+\midrule
+P25--P90 width & \multicolumn{2}{c}{0.157} & \multicolumn{2}{c}{0.169} \\
+P10--P90 width & \multicolumn{2}{c}{0.203} & \multicolumn{2}{c}{0.215} \\
+P10--P90 coverage (nominal 0.80) & \multicolumn{2}{c}{0.748} & \multicolumn{2}{c}{0.795} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The quantiles serve decisions rather than describe a symmetric interval: P25 is a conservative generation estimate for battery scheduling, P50 the point forecast and P90 an upper bound for export; P10 completes the conventional 80\% band. The P10 offset fitted on validation is negligible, so its coverage does not change. Recalibration widens both bands by about 0.012 of capacity. Quantiles are not reordered; P25, P50 and P90 cross on 3.2\% of test rows before and 1.7\% after recalibration.
+
+%% ---------------------------------------------------------------------------
+\section{Selected hyperparameters}
+\label{sec:s-hparams}
+
+\begin{table}[!htb]
+\centering
+\caption{LightGBM hyperparameters. Temporal: one search per quantile on the chronological split. Transfer: P50 search against held-out systems. Both searches were run before the timing correction and were kept fixed afterwards. Sources: \path{models/tuned/best_params_quantile.json}, \texttt{best\_params\_transfer.json}.}
+\label{tab:s-hparams}
+\small
+\begin{tabular}{@{}l c c c c@{}}
+\toprule
+Parameter & Temporal P25 & Temporal P50 & Temporal P90 & Transfer P50 \\
+\midrule
+Learning rate & 0.0152 & 0.0129 & 0.0147 & 0.0184 \\
+Trees & 1418 & 1999 & 1993 & 1500 \\
+Max depth & 11 & 15 & 20 & 4 \\
+Leaves & 222 & 247 & 148 & 101 \\
+Min child samples & 45 & 155 & 82 & 119 \\
+Subsample (freq.) & 0.771 (1) & 0.630 (0) & 0.779 (4) & 0.561 (2) \\
+Column subsample & 0.631 & 0.590 & 0.567 & 0.668 \\
+L1 penalty & 0.122 & 0.163 & 0.492 & 0.144 \\
+L2 penalty & 0.0347 & 0.0081 & 0.0015 & 4.344 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Search spaces: learning rate 0.01--0.2 (log scale); tree caps 2000 (temporal) and 1500 (transfer). Both searches reached or approached their caps, and the temporal learning rates lie near the floor of 0.01.
+
+%% ---------------------------------------------------------------------------
+\section{Preliminary learner benchmark}
+\label{sec:s-learners}
+
+\begin{table}[!htb]
+\centering
+\caption{Preliminary learner benchmark used to choose the learner, run before the timing correction. Same 33 systems and test period as the main text; 12 features (no multi-model mean), squared-error objective, 20 Optuna trials per learner minimising validation RMSE, final fit on training plus validation; rows without persistence dropped. Train time on the same workstation. Source: \path{models/pv_model/benchmark_metrics_without_MOS.csv} (\path{src/models/model_benchmark.py}).}
+\label{tab:s-learners}
+\small
+\begin{tabular}{@{}l c c c r@{}}
+\toprule
+Learner & RMSE & $R^2$ & Skill & Train (s) \\
+\midrule
+Persistence & 0.1948 & 0.406 & 0 & -- \\
+Clear-sky proxy & 0.2050 & 0.342 & $-0.053$ & -- \\
+Linear regression & 0.1722 & 0.536 & 0.116 & 0.4 \\
+Ridge regression & 0.1625 & 0.586 & 0.165 & 2.7 \\
+Decision tree & 0.1218 & 0.768 & 0.375 & 189 \\
+Random forest & 0.1148 & 0.794 & 0.411 & 1636 \\
+Histogram gradient boosting & 0.1126 & 0.801 & 0.422 & 160 \\
+XGBoost & 0.1120 & 0.804 & 0.425 & 236 \\
+LightGBM & 0.1123 & 0.802 & 0.423 & 104 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A bidirectional LSTM on 96-slot day sequences with the same 12 features, trained without tuning on a separate day-based split of the same period (186,034 test rows), reached $R^2$ 0.807 and skill 0.428 (\path{pv_model/lstm_metrics.csv}, \path{src/models/model_lstm.py}). It is not directly comparable with the table. Only LightGBM was run under the final protocol of the main text.
+
+%% ---------------------------------------------------------------------------
+\section{Weather oracle variants}
+\label{sec:s-oracles}
+
+\begin{table}[!htb]
+\centering
+\caption{Oracle variants on the chronological test split, proposed configuration, rows where every variant is defined (1,157,121 of 1,158,011 records, 33 systems). Same region: mean of the other rooftops of the same region. Three nearest: mean of the three nearest rooftops (median of the mean distance over rooftops 6.2~km). Capacity-normalised: each rooftop divided by its training-period $P_{99}$ before averaging. Geometry: solar elevation, clear-sky GHI and the reported metadata. Source: \path{src/models/review_experiments.py} (\texttt{oracles}), \path{models/review/oracle_variants.csv}.}
+\label{tab:s-oracles}
+\small
+\begin{tabularx}{\textwidth}{@{}X c c c c@{}}
+\toprule
+Arm & Features & $R^2$ & Skill & Pinball \\
+\midrule
+Baseline (NWP) & 13 & 0.8038 & 0.4253 & 0.02552 \\
++ fleet oracle & 14 & 0.8231 & 0.4543 & 0.02424 \\
++ capacity-normalised fleet oracle & 14 & 0.8230 & 0.4542 & 0.02423 \\
++ same-region oracle & 14 & 0.8692 & 0.5309 & 0.02044 \\
++ three-nearest oracle & 14 & 0.8687 & 0.5298 & 0.02039 \\
++ SARAH-3 at the rooftop & 15 & 0.7903 & 0.4059 & 0.02522 \\
+Fleet oracle + geometry, no NWP & 6 & 0.7069 & 0.2977 & 0.03336 \\
+Three-nearest oracle + geometry, no NWP & 6 & 0.7634 & 0.3690 & 0.02926 \\
+SARAH-3 + geometry, no NWP & 7 & 0.7147 & 0.3071 & 0.03256 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The local oracles carry the measured output of rooftops a few kilometres away and are worth more than three times the fleet oracle. Adding the SARAH-3 retrieval at the rooftop (GHI and clear-sky index, interpolated from hourly means as in main text Section~3.3) lowers $R^2$, although on its own it is about as informative as the fleet oracle. We have not established the cause; the arm is reported for completeness and not used in the main text.
+
+\begin{table}[!htb]
+\centering
+\caption{Correlation of errors between pairs of rooftops against their distance, test split, 528 pairs. Irradiance: hourly day-ahead ECMWF GHI minus SARAH-3. PV: P50 residual of the proposed configuration, 15-min. Median over the pairs in each distance bin. Spearman correlation of pair correlation with distance: $-0.98$ (irradiance), $-0.79$ (PV). Source: \path{src/eval/error_distance.py}, \path{models/review/error_distance_binned.csv}.}
+\label{tab:s-distance}
+\small
+\begin{tabular}{@{}l c c c c c c@{}}
+\toprule
+Distance (km) & 0--10 & 10--25 & 25--50 & 50--100 & 100--150 & 150--250 \\
+\midrule
+Pairs & 52 & 31 & 72 & 149 & 111 & 106 \\
+Irradiance error & 0.917 & 0.805 & 0.551 & 0.363 & 0.295 & 0.188 \\
+PV residual & 0.385 & 0.392 & 0.229 & 0.141 & 0.109 & 0.050 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ---------------------------------------------------------------------------
+\section{Seasonal robustness: rolling origin}
+\label{sec:s-rolling}
+
+\begin{table}[!htb]
+\centering
+\caption{Seen rooftops, 90-day test windows, each model trained only on data before the window (temporal hyperparameters, no retuning). Base: 12 features; proposed: + multi-model mean. Source: \path{src/models/review_experiments.py} (\texttt{rolling}), \path{models/review/rolling_origin.csv}.}
+\label{tab:s-rolling}
+\small
+\begin{tabular}{@{}l r r c c c c c c@{}}
+\toprule
+ & & & \multicolumn{2}{c}{$R^2$} & \multicolumn{2}{c}{Skill} & \multicolumn{2}{c}{Pinball} \\
+\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(l){8-9}
+Window & Train rows & Test rows & Base & Prop. & Base & Prop. & Base & Prop. \\
+\midrule
+May--Jul 2025 & 562,545 & 170,836 & 0.7657 & 0.7589 & 0.3748 & 0.3658 & 0.02887 & 0.02948 \\
+Aug--Oct 2025 & 737,021 & 137,042 & 0.7239 & 0.7326 & 0.3988 & 0.4083 & 0.02816 & 0.02772 \\
+Nov 2025--Jan 2026 & 877,038 & 88,959 & 0.5524 & 0.5694 & 0.3769 & 0.3889 & 0.02077 & 0.02046 \\
+Feb--May 2026 & 984,160 & 141,403 & 0.7910 & 0.7968 & 0.4287 & 0.4367 & 0.02638 & 0.02600 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The multi-model mean helps in three of four windows. In May--July 2025, the window with the shortest training history (one summer), it lowers skill by 0.009 and introduces a negative bias (MBE $-0.020$ against $0.000$). Winter $R^2$ is low, but skill against persistence stays near 0.38. The last window overlaps the main test period but trains on the validation months as well, so its values differ from the main text.
+
+%% ---------------------------------------------------------------------------
+\section{Site-feature ablation}
+\label{sec:s-ablation}
+
+\begin{table}[!htb]
+\centering
+\caption{Removing the owner-reported metadata (features 10--12: capacity, tilt, azimuth) and the lagged performance ratio (feature 13). Seen: chronological split, temporal hyperparameters, pooled. Unseen: leave-one-system-out P50 with the transfer hyperparameters, distribution over 33 held-out rooftops, one seed. Failures: skill $\le 0$. Source: \path{src/models/review_experiments.py} (\texttt{ablation}), \path{models/review/ablation_seen.csv}, \texttt{ablation\_unseen.csv}.}
+\label{tab:s-ablation}
+\small
+\begin{tabularx}{\textwidth}{@{}X c c c c c c c@{}}
+\toprule
+ & \multicolumn{2}{c}{Seen} & \multicolumn{5}{c}{Unseen} \\
+\cmidrule(lr){2-3}\cmidrule(l){4-8}
+Features & $R^2$ & Skill & Median $R^2$ & Mean & P10 & Worst & Failures \\
+\midrule
+All 13 & 0.8038 & 0.4251 & 0.7405 & 0.6595 & 0.5252 & $-0.153$ & 2 \\
+$-$ metadata (10--12) & 0.7285 & 0.3238 & 0.7465 & 0.6770 & 0.5379 & $-0.219$ & 2 \\
+$-$ lagged ratio (13) & 0.8058 & 0.4282 & 0.7130 & 0.5849 & 0.3297 & $-0.558$ & 6 \\
+$-$ both & 0.6802 & 0.2661 & 0.7486 & 0.6266 & 0.3347 & $-0.354$ & 4 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+For seen rooftops the metadata act largely as an identifier: without them, deep trees lose the per-rooftop scale they otherwise memorise, and the lagged ratio cannot replace it. For unseen rooftops the metadata add nothing on average, while the lagged ratio carries each rooftop's effective capacity into the forecast.
+
+%% ---------------------------------------------------------------------------
+\section{Irradiance-level MOS}
+\label{sec:s-mos}
+
+\begin{table}[!htb]
+\centering
+\caption{MOS of the hourly day-ahead ECMWF GHI on the test split ($n = 40{,}771$ hourly rows, 33 systems), by truth source and learner. MBE = forecast minus truth. Positive reduction = improvement. Source: \path{src/models/mos_satellite.py}, \path{models/mos_satellite_metrics.csv}.}
+\label{tab:s-mos}
+\small
+\begin{tabular}{@{}l l c c c c c@{}}
+\toprule
+Truth & Model & MAE & RMSE & MBE & $R^2$ & MAE red. (\%) \\
+ & & (W\,m$^{-2}$) & (W\,m$^{-2}$) & (W\,m$^{-2}$) & & \\
+\midrule
+SARAH-3 & Raw ECMWF & 58.63 & 90.17 & +12.18 & 0.854 & 0.00 \\
+ & Ridge & 60.54 & 87.78 & $-7.51$ & 0.862 & $-3.26$ \\
+ & Random forest & 56.52 & 87.86 & $-2.00$ & 0.862 & 3.59 \\
+ & LightGBM & 58.92 & 89.89 & $-4.99$ & 0.855 & $-0.50$ \\
+ & XGBoost & 59.89 & 90.87 & $-5.27$ & 0.852 & $-2.16$ \\
+\midrule
+ERA5 & Raw ECMWF & 39.83 & 63.46 & +9.02 & 0.921 & 0.00 \\
+ & Ridge & 42.16 & 62.66 & $-9.02$ & 0.923 & $-5.84$ \\
+ & Random forest & 43.99 & 67.93 & $-10.99$ & 0.910 & $-10.45$ \\
+ & LightGBM & 45.23 & 68.70 & $-11.49$ & 0.907 & $-13.56$ \\
+ & XGBoost & 45.72 & 69.99 & $-12.51$ & 0.904 & $-14.78$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The test rows here are a subset of the study window, so the raw errors differ from the whole-window reference comparison in the main text. Over the whole window (288,292 hourly rows), the forecast has RMSE 96.23~W\,m$^{-2}$ and MBE +16.77~W\,m$^{-2}$ against SARAH-3, 89.49 and +16.12 against SARAH-3 averaged over the 0.25$^\circ$ forecast cell (25 points), and 69.21 and +17.76 against ERA5 (\path{src/eval/reference_comparison.py}, \path{models/review/reference_comparison.csv}). Hourly mean PV output correlates with SARAH-3 at 0.846 and with ERA5 at 0.808; for both references, shifting by one hour either way lowers the correlation, which confirms the time alignment (\path{src/eval/reference_pv_corr.py}). The correction used in the PV model (out of fold, random forest) lowers test MAE from 58.63 to 55.73~W\,m$^{-2}$ and RMSE from 90.17 to 86.46~W\,m$^{-2}$, and moves the bias from +12.18 to $-3.69$~W\,m$^{-2}$.
+
+%% ---------------------------------------------------------------------------
+\section{Local calibration}
+\label{sec:s-calib}
+
+\begin{table}[!htb]
+\centering
+\caption{Median skill on 33 held-out rooftops by calibration window and correction, windows starting on 15 February 2026. The evaluation window shrinks as the calibration window grows, so compare only within a row. Source: \path{models/consolidated_full/exp5_calib_skill_pivot.csv}.}
+\label{tab:s-calib-skill}
+\small
+\begin{tabular}{@{}r c c c c@{}}
+\toprule
+Days & None & Bias & Capacity + bias & Linear \\
+\midrule
+0 & 0.3384 & -- & -- & -- \\
+3 & \textbf{0.3388} & 0.2817 & 0.2767 & $-0.1574$ \\
+7 & \textbf{0.3411} & 0.3195 & 0.3013 & $-0.1163$ \\
+14 & \textbf{0.3428} & 0.3108 & 0.3065 & 0.1001 \\
+30 & 0.3254 & 0.3183 & 0.3279 & \textbf{0.3306} \\
+45 & 0.3059 & \textbf{0.3364} & 0.3245 & 0.3336 \\
+60 & 0.2649 & 0.2954 & 0.2953 & \textbf{0.3224} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!htb]
+\centering
+\caption{As Table~\ref{tab:s-calib-skill}, median $R^2$. Source: \path{models/consolidated_full/exp5_calib_r2_pivot.csv}.}
+\label{tab:s-calib-r2}
+\small
+\begin{tabular}{@{}r c c c c@{}}
+\toprule
+Days & None & Bias & Capacity + bias & Linear \\
+\midrule
+0 & 0.7405 & -- & -- & -- \\
+3 & 0.7373 & 0.7005 & 0.6881 & 0.2630 \\
+7 & 0.7406 & 0.7160 & 0.7066 & 0.2932 \\
+14 & 0.7332 & 0.7129 & 0.7190 & 0.4877 \\
+30 & 0.7400 & 0.7371 & 0.7483 & 0.7429 \\
+45 & 0.7449 & 0.7491 & 0.7594 & 0.7591 \\
+60 & 0.7388 & 0.7577 & 0.7534 & 0.7627 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!htb]
+\centering
+\caption{Calibration start date. Median skill on held-out rooftops on a fixed scoring window (days 60--90 after the start), so the columns of one start are directly comparable and the start dates differ only in season. Rooftops: 32 for the May and November starts (one rooftop lacks data), 33 otherwise. Source: \path{src/models/review_experiments.py} (\texttt{calibstarts}), \path{models/review/calibration_starts_pivot.csv}.}
+\label{tab:s-calibstarts}
+\small
+\begin{tabular}{@{}l r c c c c@{}}
+\toprule
+Start & Days & None & Bias & Capacity + bias & Linear \\
+\midrule
+1 May 2025 & 7 & 0.2788 & 0.3169 & 0.3257 & \textbf{0.3332} \\
+ & 14 & 0.2788 & 0.3147 & 0.3082 & \textbf{0.3327} \\
+ & 30 & 0.2788 & 0.3154 & 0.3190 & \textbf{0.3248} \\
+ & 60 & 0.2788 & 0.3166 & 0.3118 & \textbf{0.3276} \\
+1 Aug 2025 & 7 & 0.3798 & 0.3870 & 0.3857 & \textbf{0.3877} \\
+ & 14 & 0.3798 & 0.3828 & 0.3904 & \textbf{0.3947} \\
+ & 30 & 0.3798 & 0.3833 & 0.3901 & \textbf{0.3980} \\
+ & 60 & 0.3798 & 0.3894 & 0.3931 & \textbf{0.4009} \\
+1 Nov 2025 & 7 & 0.3132 & 0.3212 & 0.2263 & \textbf{0.3223} \\
+ & 14 & 0.3132 & \textbf{0.3415} & 0.2533 & 0.3378 \\
+ & 30 & 0.3132 & \textbf{0.3417} & 0.2724 & 0.3341 \\
+ & 60 & 0.3132 & \textbf{0.3358} & 0.2645 & 0.3303 \\
+15 Feb 2026 & 7 & \textbf{0.3064} & 0.2818 & 0.2479 & $-0.1299$ \\
+ & 14 & \textbf{0.3064} & 0.2822 & 0.2502 & 0.1255 \\
+ & 30 & 0.3064 & 0.2992 & 0.2835 & \textbf{0.3080} \\
+ & 60 & 0.3064 & 0.3134 & 0.3066 & \textbf{0.3246} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Only the February start makes short calibration windows harmful. In the other seasons linear rescaling (or a bias offset in November) improves on the uncorrected forecast from 7 days. Capacity + bias is harmful for the November start at every window, plausibly because a winter $P_{99}$ understates a rooftop's capacity. The 45-day row of the start-date sweep is in the source file.
+
+%% ---------------------------------------------------------------------------
+\section{Shading flag and zero-shot accuracy}
+\label{sec:s-shade}
+
+Owners report shading as none, low or medium. Median zero-shot $R^2$ falls across these categories: 0.742 (none, 26 systems), 0.671 (low, 3) and 0.613 (medium, 3); one system has no entry. With three systems in each shaded category the trend is suggestive only. The nine systems with a reported tilt of 1$^\circ$ or less have median zero-shot $R^2$ 0.705 against 0.741 for the rest (Mann--Whitney $p = 0.56$). Sources: \path{models/consolidated_full/exp5_loso_per_system.csv}, \path{data/interim/pvoutput_selection/systems_metadata.csv}.
+
+%% ---------------------------------------------------------------------------
+\section{Paired comparisons}
+\label{sec:s-paired}
+
+\begin{table}[!htb]
+\centering
+\caption{Paired differences (second arm minus first) on the chronological test split. Intervals: 95\% day-block bootstrap, 2000 resamples of 107 test days. $p$: two-sided Diebold--Mariano test on daily squared error of P50 ($p_\mathrm{SE}$) and daily mean pinball loss ($p_\mathrm{pin}$), Newey--West variance. Pinball differences in units of $10^{-3}$. Source: \path{src/eval/revision_stats.py}, \path{models/revision/paired_comparisons.csv}.}
+\label{tab:s-paired}
+\scriptsize
+\begin{tabularx}{\textwidth}{@{}X c c c c@{}}
+\toprule
+Comparison & $\Delta$ skill & $\Delta$ pinball & $p_\mathrm{SE}$ & $p_\mathrm{pin}$ \\
+\midrule
+E0 objective: pinball vs RMSE selection (33 systems) & $+0.0027$\,[$+0.0015$, $+0.0038$] & $-0.14$\,[$-0.18$, $-0.11$] & $<0.001$ & $<0.001$ \\
+E1 oracle: + fleet oracle vs NWP only & $+0.0291$\,[$+0.0188$, $+0.0404$] & $-1.32$\,[$-1.77$, $-0.89$] & $<0.001$ & $<0.001$ \\
+E1 oracle: fleet oracle without NWP vs NWP only & $-0.1271$\,[$-0.1605$, $-0.0953$] & $+7.83$\,[$+6.21$, $+9.32$] & $<0.001$ & $<0.001$ \\
+E3: + multi-model mean (6 centres) vs base & $+0.0067$\,[$+0.0014$, $+0.0119$] & $-0.31$\,[$-0.52$, $-0.10$] & 0.01 & 0.004 \\
+E3: + multi-model mean (5 centres, no Met Office) vs base & $+0.0045$\,[$-0.0021$, $+0.0106$] & $-0.31$\,[$-0.53$, $-0.08$] & 0.13 & 0.006 \\
+E3: + mean of all 12 members vs base & $+0.0008$\,[$-0.0036$, $+0.0051$] & $-0.04$\,[$-0.23$, $+0.14$] & 0.92 & 0.80 \\
+E3: + ensemble-mean POA vs base & $+0.0011$\,[$-0.0038$, $+0.0056$] & $-0.03$\,[$-0.22$, $+0.17$] & 0.79 & 0.91 \\
+E3: + lagged mean (days 1--3) vs base & $-0.0000$\,[$-0.0028$, $+0.0024$] & $+0.01$\,[$-0.12$, $+0.15$] & 0.96 & 0.72 \\
+E3: + spread only vs base & $-0.0005$\,[$-0.0036$, $+0.0025$] & $+0.31$\,[$+0.14$, $+0.49$] & 0.62 & 0.002 \\
+E3: + all 10 ensemble features vs base & $+0.0014$\,[$-0.0058$, $+0.0078$] & $+0.28$\,[$-0.02$, $+0.60$] & 0.97 & 0.07 \\
+E4: recalibrated vs raw (33 systems, base + ens) & $+0.0003$\,[$-0.0005$, $+0.0010$] & $-0.00$\,[$-0.07$, $+0.06$] & 0.35 & 0.82 \\
+E4 (32 systems): + multi-model mean vs base & $+0.0072$\,[$+0.0019$, $+0.0126$] & $-0.29$\,[$-0.51$, $-0.08$] & 0.010 & 0.009 \\
+MOS seen rooftops (33): corrected irradiance vs baseline & $-0.0007$\,[$-0.0024$, $+0.0010$] & $+0.06$\,[$-0.00$, $+0.13$] & 0.17 & 0.02 \\
+MOS seen rooftops (33): MOS as extra features vs baseline & $-0.0006$\,[$-0.0027$, $+0.0016$] & $+0.18$\,[$+0.07$, $+0.29$] & 0.66 & 0.01 \\
+MOS seen rooftops (32): corrected irradiance vs baseline & $-0.0006$\,[$-0.0023$, $+0.0011$] & $+0.05$\,[$-0.02$, $+0.11$] & 0.24 & 0.05 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%% ---------------------------------------------------------------------------
+\section{Seed variation of the zero-shot results}
+\label{sec:s-seeds}
+
+\begin{table}[!htb]
+\centering
+\caption{Leave-one-system-out P50 results on 33 held-out rooftops for each random seed (LightGBM row and column subsampling). Failures: skill $\le 0$. Paired Wilcoxon signed-rank tests on seed-averaged per-rooftop $R^2$: transfer better than temporal on 21 of 33 rooftops ($p = 0.004$), transfer better than preliminary on 18 ($p = 0.032$), temporal better than preliminary on 9 ($p = 0.003$). Source: \path{src/models/loso_seeds.py}, \path{models/revision/loso_seeds_summary.csv}, \path{src/eval/revision_stats.py}.}
+\label{tab:s-seeds}
+\small
+\begin{tabularx}{\textwidth}{@{}X c c c c c c c@{}}
+\toprule
+Configuration & Seed & Median $R^2$ & Mean $R^2$ & P10 & Worst & Median skill & Failures \\
+\midrule
+Preliminary & 0 & 0.7089 & 0.6030 & 0.3296 & $-0.8045$ & 0.3179 & 4 \\
+Preliminary & 1 & 0.7106 & 0.5923 & 0.3582 & $-1.0954$ & 0.3198 & 4 \\
+Preliminary & 2 & 0.6995 & 0.5943 & 0.3522 & $-1.0261$ & 0.3069 & 4 \\
+Temporal & 0 & 0.7020 & 0.5879 & 0.3165 & $-1.0606$ & 0.3098 & 4 \\
+Temporal & 1 & 0.6960 & 0.5905 & 0.3272 & $-1.0140$ & 0.3012 & 4 \\
+Temporal & 2 & 0.7022 & 0.5911 & 0.3233 & $-1.0071$ & 0.3055 & 4 \\
+Transfer & 0 & 0.7385 & 0.6613 & 0.5248 & $-0.1824$ & 0.3347 & 2 \\
+Transfer & 1 & 0.7387 & 0.6582 & 0.5290 & $-0.1687$ & 0.3395 & 2 \\
+Transfer & 2 & 0.7398 & 0.6583 & 0.5277 & $-0.1606$ & 0.3342 & 2 \\
+Transfer & 3 & 0.7345 & 0.6602 & 0.5181 & $-0.1564$ & 0.3374 & 2 \\
+Transfer & 4 & 0.7385 & 0.6605 & 0.5247 & $-0.1731$ & 0.3373 & 2 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%% ---------------------------------------------------------------------------
+\section{Reference baselines}
+\label{sec:s-baselines}
+
+\begin{table}[!htb]
+\centering
+\caption{Baselines without machine learning on the chronological test split, 33 systems. Pooled: over all test rows. Per rooftop: distribution of $R^2$ over the 33 systems; failures, skill $\le 0$. Physical chain: Hay--Davies plane-of-array irradiance from the ECMWF forecast, Faiman cell temperature, PVWatts ($\gamma = -0.4\,\%\,\mathrm{K}^{-1}$), 14\% losses, nameplate capacity. Source: \path{src/models/baselines.py}, \path{models/revision/baselines_pooled.csv}, \texttt{baselines\_per\_system.csv}.}
+\label{tab:s-baselines}
+\small
+\begin{tabularx}{\textwidth}{@{}X c c c c c c@{}}
+\toprule
+ & \multicolumn{2}{c}{Pooled} & \multicolumn{4}{c}{Per rooftop} \\
+\cmidrule(lr){2-3}\cmidrule(l){4-7}
+Baseline & $R^2$ & Skill & Median $R^2$ & P10 & Worst & Failures \\
+\midrule
+Persistence & 0.4062 & 0 & 0.409 & 0.266 & 0.055 & -- \\
+Smart persistence & 0.4006 & $-0.0047$ & 0.404 & 0.260 & 0.045 & 33 \\
+Physical chain, nameplate & 0.6343 & 0.2152 & 0.712 & 0.303 & $-0.503$ & 6 \\
+Physical chain, per-rooftop scale & 0.7137 & 0.3056 & 0.741 & 0.523 & 0.238 & 0 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Smart persistence rescales yesterday's output by the ratio of clear-sky GHI between the two days. At a one-day lag that ratio is close to one, so the two persistence references differ by less than 0.5\% of RMSE. The per-rooftop scale factor is fitted by least squares on each rooftop's training split (median 0.904, range 0.513--1.662), so that variant uses local history and is not a zero-shot method. Across the 33 rooftops, the bias of the nameplate physical chain correlates with the capacity ratio $P_{99}/C_\mathrm{p}$ at +0.850, and its $R^2$ correlates with the zero-shot learner's $R^2$ at +0.971; the zero-shot learner has the higher $R^2$ on 25 of 33 rooftops. Wind speed from Open-Meteo is served in km\,h$^{-1}$ and is converted to m\,s$^{-1}$; plane-of-array irradiance is capped at 1400~W\,m$^{-2}$ to remove rare transposition spikes at low sun.
+
+%% ---------------------------------------------------------------------------
+%% [EPSR-SCOPE] grid-facing aggregation. Optional for other journals (JOURNAL_NOTES.md).
+\section{Aggregated forecast error}
+\label{sec:s-aggregate}
+
+\begin{table}[!htb]
+\centering
+\caption{Day-ahead P50 error of the proposed configuration (33 systems) after summing rooftop forecasts in kW. nRMSE: RMSE over installed capacity of the summed rooftops. Skill: against the summed persistence forecast. Daily imbalance: sum over days of $|\sum_t (P - \hat{P})|\,\Delta t$ as a share of energy. Individual: median over rooftops. Source: \path{src/eval/grid_aggregate.py}, \path{models/revision/grid_aggregate.csv}.}
+\label{tab:s-aggregate}
+\small
+\begin{tabularx}{\textwidth}{@{}X c c c c c@{}}
+\toprule
+Level & Rooftops & nRMSE (\% cap.) & Skill & Daily imbalance (\%) & Mean daily imbalance (kWh) \\
+\midrule
+Individual rooftop (median) & 1 & 11.04 & 0.450 & 11.51 & 2.12 \\
+Region: Ardennes & 4 & 8.62 & 0.476 & 10.28 & 8.15 \\
+Region: Li\`ege & 6 & 8.47 & 0.521 & 10.08 & 11.01 \\
+Region: West Flanders coast & 7 & 7.58 & 0.504 & 12.03 & 13.57 \\
+Region: Antwerp & 8 & 7.44 & 0.499 & 11.48 & 14.98 \\
+Region: Brussels and centre & 8 & 6.49 & 0.540 & 8.80 & 14.23 \\
+Fleet & 33 & 4.87 & 0.601 & 8.36 & 49.64 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%% ---------------------------------------------------------------------------
+\section{Comparison with SolNet}
+\label{sec:s-solnet}
+
+\begin{table}[!htb]
+\centering
+\caption{SolNet \citep{Depoortere2025} against this study. SolNet values are as reported by its authors; nothing was rerun.}
+\label{tab:s-solnet}
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.7cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+ & SolNet & This study \\
+\midrule
+Model & LSTM, 3 layers of 400 units & LightGBM quantile models (P10, P25, P50, P90) \\
+Transfer source & synthetic PVGIS output for each target site (2005--2018; 2005--2010 for Australia) & 32 other measured rooftops of the same fleet \\
+Local data & fine-tuning on 0--12 months & none (zero-shot), then 0--60 days of linear or offset correction \\
+Issue time and horizon & 00:00, next 24 hourly values & noon, following day, 96 slots of 15 min \\
+Inputs at issue & 24 lagged hourly PV values; with weather, the DWD ICON 00:00 run (published hours later, per the authors) & day-ahead NWP from six centres; PV ratio from two days earlier \\
+Sites & 40 Dutch and 300 Australian homes, two Belgian commercial sites & 33 Belgian homes \\
+Metric & RMSE after min--max scaling, against seasonal naive & skill and $R^2$ against persistence, pinball loss \\
+Zero-shot accuracy & median scaled RMSE 0.135 (Australia, no weather) & median $R^2$ 0.741, skill 0.338; 2 of 33 rooftops below persistence \\
+When local data helps & local model beats transfer after about 6 months; beats naive after 2 months with weather & linear rescaling helps after 7 days, except for a mid-February start \\
+Location error & 200~km error removes the transfer advantage within two months & exact coordinates used; not tested \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+A direct rerun would not measure SolNet as published. Its forecast is issued at midnight and conditions on the preceding 24~h of output, which a noon day-ahead forecast does not have, and its hourly resolution and scaled-RMSE metric differ from ours. The two studies agree that a fleet-trained or synthetically pretrained model serves a new site from the first day. They differ in how local data is used: SolNet retrains the network, which needs months, whereas a two-parameter correction of a transferred forecast needs about a week here.
+
+%% ---------------------------------------------------------------------------
+\section{Positioning against published work}
+\label{sec:s-position}
+
+\begin{table}[!htb]
+\centering
+\caption{Comparison with published results. Corroboration: qualitative agreement under different conditions. Not comparable: different quantity, reference or normalisation.}
+\label{tab:s-position}
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+Kind & Published & This study \\
+\midrule
+Context: ECMWF GHI bias & +8~W\,m$^{-2}$, four years of ceilometer and pyranometer data at 60$^\circ$N \citep{Tuononen2019} & +16.8~W\,m$^{-2}$ against SARAH-3 (day-ahead, 50--51$^\circ$N) \\
+Context: reference uncertainty & CM SAF satellite products, MAD 8--13~W\,m$^{-2}$ in central Europe, daily means \citep{Urraca2017} & inherited by all irradiance figures \\
+Corroboration: ERA5 as reference & cloud-dependent bias, larger errors than satellite products \citep{Urraca2018} & ERA5 understates ECMWF RMSE 1.39-fold \\
+Corroboration: learner & tree ensembles best on 152 distributed systems \citep{Visser2019} & gradient boosting adopted \\
+Corroboration: input vs model & NWP worth +11.6 points of skill at day-ahead, above any model family \citep{Nguyen2026} & local-oracle headroom +0.065 $R^2$; best input widening +0.0046 $R^2$ \\
+Corroboration: transfer & local model needs $\sim$2 months to beat a naive baseline \citep{Depoortere2025} & local correction helps after 7 days except in a spring start \\
+Not comparable: probabilistic & 18.4\% mean-normalised CRPS, 14 utility-scale plants \citep{MayerYang2023} & mean pinball 0.02551; nRMSE 11.2\% of capacity, 39.0\% of mean output \\
+Not comparable: skill & skill against smart persistence \citep{Visser2019} & skill 0.4251 against plain persistence (smart persistence: $-0.005$) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%% ---------------------------------------------------------------------------
+\section{Computation}
+\label{sec:s-compute}
+
+All experiments ran on one workstation with 12 logical CPU cores (Python 3.12, LightGBM 4.6.0, scikit-learn 1.9.0, pandas 3.0.3, pvlib). The three temporal searches took 145~min in total (42.8, 59.5 and 43.0~min) and the transfer search 21~min. Every result after the timing correction is regenerated by \path{run_review_pipeline.sh}. LightGBM's OpenCL GPU backend was 3.0 times slower than the CPU on this workload (47.4~s against 15.8~s for 300 trees on the training split). With 13 features there is too little histogram work per row for the GPU to recover its kernel-launch overhead.
+%% GPU timing source: v3_ensemble/README.md ("Note on GPU"); no log file in the repository.
+

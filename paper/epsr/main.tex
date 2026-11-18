@@ -17,6 +17,8 @@
 \usepackage{flafter}    % a float never appears before the text that calls it
 \usepackage{siunitx}
 \usepackage[hidelinks]{hyperref}
+\usepackage{url}    % \path{} in the supplementary material
+\def\UrlBreaks{\do\/\do\_\do\.}
 %% Line numbers help reviewers cite exact lines. Uncomment \linenumbers to switch them on.
 \usepackage{lineno}
 %\linenumbers
@@ -25,6 +27,12 @@
 %% and tagged [EPSR-SCOPE]. For another journal set \epsrfalse (see JOURNAL_NOTES.md).
 \newif\ifepsr
 \epsrtrue
+
+%% Review copies: append the supplementary material after the references so
+%% reviewers get one PDF. Set \withsuppfalse for submission, where the
+%% supplementary material is uploaded separately (compile supplementary.tex).
+\newif\ifwithsupp
+\withsupptrue
 
 \journal{Electric Power Systems Research}
 
@@ -83,5 +91,11 @@ Photovoltaic \sep Forecasting \sep Day-ahead \sep NWP \sep Quantile regression \
 \FloatBarrier
 \bibliographystyle{elsarticle-harv}
 \bibliography{refs}
+
+\ifwithsupp
+\clearpage
+\section*{Supplementary material}
+\input{supplementary_content}
+\fi
 
 \end{document}

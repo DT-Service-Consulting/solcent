@@ -6,7 +6,7 @@ Fig.~\ref{fig:workflow} shows the inputs, the model and the three evaluation set
 \begin{figure}[!htb]
 \centering
 \includegraphics[width=\textwidth]{figures/fig3_workflow.pdf}
-\caption{Methodology. Solid paths are operational: every input exists at the noon issue time of the preceding day. The dashed MOS branch supplies corrected irradiance as a substitute input. The shaded fleet oracle uses information unavailable at forecast time. ERA5 enters only as a control reference.}
+\caption{Methodology. Solid paths are operational: every input exists at the noon issue time of the preceding day. The dashed MOS branch supplies corrected irradiance as a substitute input. The shaded weather oracles use information unavailable at forecast time. ERA5 enters only as a control reference.}
 \label{fig:workflow}
 \end{figure}
 
@@ -65,14 +65,14 @@ Forecasts come from LightGBM gradient-boosted trees \citep{Ke2017,Friedman2001}.
 \begin{equation}
 L_\alpha(y, \hat{y}) = \max\left[\alpha (y - \hat{y}),\; (\alpha - 1)(y - \hat{y})\right],
 \end{equation}
-whose minimiser is the conditional $\alpha$-quantile \citep{Koenker1978}. P50 serves as the point forecast. Quantiles are fitted independently and not reordered; they cross on 3.2\% of test rows before and 1.7\% after recalibration.
+whose minimiser is the conditional $\alpha$-quantile \citep{Koenker1978}. The quantiles follow the decisions the forecast serves rather than a symmetric interval: P25 is a conservative generation estimate for battery scheduling, where over-forecasting leaves a battery uncharged and forces peak-price imports; P50 is the point forecast; P90 bounds export. Their band has nominal coverage 0.65. A P10 model, with the P25 hyperparameters, completes an 80\% band for comparison with common practice. Quantiles are fitted independently and not reordered; they cross on 3.2\% of test rows before and 1.7\% after recalibration.
 
 Two hyperparameter searches use a tree-structured Parzen estimator in Optuna \citep{Akiba2019}. The \textbf{temporal search} (known rooftops) runs sixty trials per quantile minimising that quantile's pinball loss on the validation split, with early stopping on the last 15\% of the training split; it selects depths of 11, 15 and 20 for P25, P50 and P90 and up to 2000 trees. E0 compares it with a preliminary configuration from 20 trials minimising validation RMSE, shared by all quantiles. The \textbf{transfer search} (unseen rooftops) holds out whole systems instead of future dates: the systems of a 45\% row subsample of the training and validation periods form three folds of eleven, and each of forty trials trains on two folds and is scored by P50 pinball loss on the third. It selects depth 4, L2 penalty 4.34 and 1500 trees. The temporal search excluded system 81376, flagged from its test-split error (Section~\ref{sec:res-config}). The temporal configuration is used on the chronological split, the transfer configuration for P50 in every leave-one-system-out experiment.
 
 \subsection{Ensemble constructions}
 \label{sec:meth-ens}
 
-Three ways of widening the weather input are compared, all at a day-ahead lead time. Seven ECMWF runs issued one to seven days before the target and the day-ahead forecasts of five other centres form twelve members. A \emph{lagged mean} averages the ECMWF runs issued one to three days before the target. A \emph{multi-model mean} averages the day-ahead GHI of the six centres, ignoring missing members (feature 6). \emph{Ensemble dispersion} supplies the standard deviation across all members, across lagged members and across centres, the interquartile range and the fraction of members within $\pm 15\%$ of the mean.
+Three ways of widening the weather input are compared, all at a day-ahead lead time. Seven ECMWF runs issued one to seven days before the target and the day-ahead forecasts of five other centres form twelve members. A \emph{lagged mean} averages the ECMWF runs issued one to three days before the target. A \emph{multi-model mean} averages the day-ahead GHI of the six centres, ignoring missing members (feature 6). \emph{Ensemble dispersion} supplies standard deviations across all, lagged and multi-centre members, the interquartile range and the share of members within $\pm 15\%$ of the mean.
 
 \subsection{Weather oracles}
 \label{sec:meth-oracle}
@@ -110,25 +110,4 @@ with the fleet median taken from training systems only, and then removes the res
 \subsection{Experiments}
 \label{sec:meth-exp}
 
-Table~\ref{tab:experiments} lists the experiments; each varies one factor and holds the rest fixed. The robustness checks (R) train on data before each of four 90-day windows, start local calibration on four dates and score a fixed later window, remove site features, and add a P10 model. The Supplementary material gives hyperparameters, full result tables and computation details.
-
-\begin{table}[!htb]
-\centering
-\caption{Experiments. Split: T, chronological; L, leave-one-system-out.}
-\label{tab:experiments}
-\small
-\begin{tabularx}{\textwidth}{@{}l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X l@{}}
-\toprule
-ID & Question & Varied & Split \\
-\midrule
-E0 & Does the selection objective matter? & RMSE vs pinball selection & T \\
-E1 & What is better weather knowledge worth? & oracle scope; NWP present or absent & T \\
-E2 & Where does the residual error live? & stratification; distance & T \\
-E3 & Which input widening helps? & feature subset (7 arms) & T \\
-E4 & What is the proposed configuration worth? & ensemble feature; system 81376; recalibration & T \\
-E5 & What does an unseen rooftop receive? & held-out system; calibration window and method & L \\
-MOS & Does irradiance correction reach power? & raw or corrected irradiance & T, L \\
-R & Are the results robust? & site features; season; calibration start; P10 & T, L \\
-\bottomrule
-\end{tabularx}
-\end{table}
+Experiments E0--E5 and MOS each vary one factor and hold the rest fixed. Robustness checks train on data before each of four 90-day windows, start local calibration on four dates and score a fixed later window, and remove site features. The Supplementary material lists the experiments and gives hyperparameters, full result tables and computation details.

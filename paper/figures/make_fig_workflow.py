@@ -98,7 +98,7 @@ def main():
                 weight="bold")
 
     # ---- inputs
-    pv = box(ax, 0.1, 4.75, 1.7, 0.68, "PVOutput\n33 rooftops, 5 min", FILL_DATA)
+    pv = box(ax, 0.1, 4.75, 1.7, 0.68, "PVOutput\n33 rooftops, 5-15 min", FILL_DATA)
     nwp = box(ax, 0.1, 3.55, 1.7, 0.90,
               "NWP day-ahead\nECMWF + 5 centres\nlagged runs d1-d7", FILL_DATA)
     sat = box(ax, 0.1, 2.40, 1.7, 0.68, "SARAH-3\nsatellite GHI", FILL_DATA)
@@ -117,9 +117,9 @@ def main():
                "13 features\nweather · geometry\nmetadata · PR lag", lw=1.0)
     model = box(ax, 4.95, 2.35, 1.9, 1.00,
                 "LightGBM\nP25 / P50 / P90\npinball objective", lw=1.0)
-    recal = box(ax, 4.95, 1.35, 1.9, 0.68, "conformal\nrecalibration (val)")
+    recal = box(ax, 4.95, 1.35, 1.9, 0.68, "offset\nrecalibration (val)")
     oracle = box(ax, 4.95, 0.30, 1.9, 0.72,
-                 "Fleet oracle\nleave-one-out fleet truth",
+                 "Weather oracles\nfleet / regional / nearest",
                  FILL_DIAG, EDGE_DIAG, ls="--")
 
     # ---- evaluation
