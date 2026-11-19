@@ -1,0 +1,34 @@
+%% Cover letter for the EPSR submission. Compile on its own (pdfLaTeX).
+%% Items marked TODO need the authors' confirmation before upload.
+\documentclass[11pt]{letter}
+\usepackage[a4paper,margin=25mm]{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+
+\signature{Chandradip Roy\\Corresponding author, on behalf of both authors}
+\address{Chandradip Roy\\Manipal Institute of Technology\\Udupi-Karkala Rd, Eshwar Nagar\\Manipal 576104, Karnataka, India\\\href{mailto:official.chandradip@gmail.com}{official.chandradip@gmail.com}}
+
+\begin{document}
+\begin{letter}{The Editor-in-Chief\\Electric Power Systems Research}
+
+\opening{Dear Editor,}
+
+We submit the manuscript ``Day-ahead probabilistic forecasting of residential rooftop photovoltaic power: transfer to unseen systems and the input-imposed accuracy limit'' by Chandradip Roy and Sara Ghane for consideration as a \textbf{Full Length Article} in \emph{Electric Power Systems Research}.
+
+\textbf{Article length.} The manuscript contains \textbf{6,967 words}, counting the abstract, keywords, highlights, main text, tables, figure captions and the declaration sections, and excluding only the references, as the Guide for Authors specifies. It has 9 figures and 3 tables. Supplementary material (19 tables) is supplied as a separate file and is not part of the article.
+%% Count: abstract + sections 01-07 (6,702), highlights (56), declarations (200), keywords (9);
+%% tables and captions included. Recount with paper/epsr/wordcount.py after any edit.
+
+\textbf{Summary.} Distribution system operators, aggregators and home energy-management systems need day-ahead forecasts for individual rooftops, yet reported accuracy gains rarely show how close they are to a limit. On 33 residential rooftops in Belgium, at 15-min resolution over 26 months, we show that the limit for rooftops seen in training is set by the weather input: knowledge of the local sky would add at least 0.065 in $R^2$, irradiance errors are equally large at every rooftop but correlated only over tens of kilometres, and removing 70\% of the systematic irradiance bias leaves the PV forecast unchanged. Two results should generalise to fleet models built from volunteer data: validating NWP irradiance against ERA5, a reanalysis from the same centre, understates its error 1.39-fold relative to the SARAH-3 satellite record; and hyperparameters selected on a chronological split transfer poorly to unseen rooftops, while selecting them against held-out systems halves the failures.
+
+\textbf{Relevance to the journal.} The study addresses forecasting for distributed generation from the grid's point of view. It reports the accuracy a newly connected rooftop can expect, how much local history site calibration needs, how forecast error shrinks when rooftops are aggregated to regional and fleet level, and which installation records an operator should screen before relying on a forecast.
+
+\textbf{Data and code.} All analysis code and the derived results behind every table and figure are openly available at \url{https://github.com/DT-Service-Consulting/solcent} (tag \texttt{v1.4-paper}).
+
+%% TODO: confirm both statements before upload.
+This manuscript is original, has not been published, and is not under consideration elsewhere. Both authors have approved the submission and declare no competing interests.
+
+\closing{Yours sincerely,}
+
+\end{letter}
+\end{document}
