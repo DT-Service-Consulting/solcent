@@ -90,3 +90,7 @@ paper/reference_check.md
 # Session and scratch artifacts
 .claude/
 notebooks/.cache.sqlite
+
+# Generated submission package (paper/make_submission.py) and Overleaf zips
+paper/epsr_submission/
+paper/*.zip
