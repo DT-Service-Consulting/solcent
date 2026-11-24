@@ -1,0 +1,7 @@
+setting,reference,ref_RMSE,model_RMSE,pooled_skill,median_rooftop_skill,failures
+"seen (chronological split, proposed P50)",persistence,0.19474028840762997,0.11195085505697787,0.42512740444009933,0.4504110005886851,
+"seen (chronological split, proposed P50)",climatology,0.17210770736088524,0.11195085505697787,0.349530263498119,0.37194743811393327,
+"seen (chronological split, proposed P50)",combined,0.15997446280479322,0.11195085505697787,0.30019546186203194,0.32673484096872496,
+unseen (leave-one-system-out P50),persistence,0.19468648913359468,,,0.3384197865061409,2.0
+unseen (leave-one-system-out P50),climatology,0.17226426851115645,,,0.23999996264151768,3.0
+unseen (leave-one-system-out P50),combined,0.159987226266521,,,0.209622565713106,6.0

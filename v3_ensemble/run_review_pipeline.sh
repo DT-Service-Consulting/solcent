@@ -22,6 +22,7 @@ step $V/src/eval/residual_autocorr.py
 step $V/src/models/mos_satellite.py
 step $V/src/eval/reference_comparison.py
 step $V/src/eval/reference_pv_corr.py
+step $V/src/eval/reference_combined.py
 step $V/src/eval/weather_error_regime.py
 step $V/src/models/mos_pv_integration.py --full-fleet --save-preds
 step $V/src/models/mos_pv_integration.py --save-preds
